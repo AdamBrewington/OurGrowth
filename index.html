@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#fffdf9">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -72,7 +74,6 @@
   .stat-label { font-size: 0.67rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
   .stat-hint { font-size: 0.6rem; color: var(--accent); margin-top: 5px; opacity: 0.8; }
 
-  /* A fix: full row tappable */
   .task-item { display: flex; align-items: center; gap: 12px; padding: 13px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 10px; margin: 0 -10px; transition: background 0.14s; user-select: none; }
   .task-item:last-child { border-bottom: none; }
   .task-item:active { background: rgba(196,154,60,0.07); }
@@ -87,6 +88,9 @@
   .tag-home { background: var(--green-soft); color: var(--green); }
   .tag-both { background: rgba(0,0,0,0.05); color: var(--text-muted); }
 
+  .del-btn { font-size: 0.85rem; color: var(--text-dim); cursor: pointer; padding: 4px 8px; pointer-events: auto; opacity: 0.6; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; background: none; border: none; font-family: inherit; }
+  .del-btn:hover, .del-btn:active { opacity: 1; color: var(--rose); }
+
   .add-row { display: flex; gap: 8px; margin-top: 14px; }
   .add-input { flex: 1; background: rgba(255,255,255,0.95); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none; }
   .add-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -100,7 +104,6 @@
   .tab-pill { padding: 7px 15px; border-radius: 20px; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.75); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; white-space: nowrap; transition: all 0.18s; }
   .tab-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
 
-  /* B fix: owner pill row */
   .owner-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
   .owner-pill { padding: 7px 13px; border-radius: 20px; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.75); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.76rem; cursor: pointer; white-space: nowrap; transition: all 0.18s; }
   .owner-pill.sel-adam { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
@@ -108,13 +111,16 @@
   .owner-pill.sel-home { background: var(--green-soft); border-color: var(--green); color: var(--green); font-weight: 500; }
   .owner-pill.sel-both { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: var(--text); font-weight: 500; }
 
-  .bill-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .bill-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 8px; }
   .bill-item:last-child { border-bottom: none; }
   .bill-name { font-size: 0.88rem; }
   .bill-sub { font-size: 0.67rem; color: var(--text-muted); margin-top: 2px; }
-  .bill-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; }
+  .bill-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; flex-shrink: 0; }
   .bill-amount.due { color: var(--rose); }
-  .bill-amount.ok { color: var(--green); }
+  .bill-amount.ok { color: var(--green); text-decoration: line-through; opacity: 0.6; }
+  .bill-paid-btn { font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 14px; cursor: pointer; border: 1px solid; transition: all 0.18s; font-family: 'DM Sans', sans-serif; font-weight: 500; flex-shrink: 0; }
+  .bill-paid-btn.unpaid { background: var(--rose-soft); border-color: var(--rose); color: var(--rose); }
+  .bill-paid-btn.paid { background: var(--green-soft); border-color: var(--green); color: var(--green); }
 
   .goal-bar-track { height: 5px; background: rgba(0,0,0,0.07); border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }
   .goal-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.5s ease; }
@@ -141,6 +147,7 @@
 
   .chore-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
   .chore-item:last-child { border-bottom: none; }
+  .chore-item.chore-done { opacity: 0.4; }
   .chore-icon { font-size: 1.1rem; width: 26px; text-align: center; }
   .chore-text { flex: 1; font-size: 0.88rem; }
   .chore-freq { font-size: 0.61rem; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
@@ -151,17 +158,16 @@
   .goal-name { font-size: 0.9rem; }
   .goal-pct { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--accent); }
 
-  .acct-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .acct-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 8px; }
   .acct-item:last-child { border-bottom: none; }
   .acct-name { font-size: 0.9rem; margin-bottom: 3px; }
   .acct-sub { font-size: 0.67rem; color: var(--text-muted); }
   .acct-renew { font-size: 0.67rem; color: var(--text-muted); background: rgba(0,0,0,0.04); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; white-space: nowrap; }
 
-  /* E fix: nav icons already present on all tabs */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: rgba(255,253,249,0.94); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border-top: 1px solid var(--border); display: flex; align-items: stretch; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0); }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: transparent; padding: 6px 2px; transition: opacity 0.15s; }
-  .nav-icon { font-size: 1.3rem; line-height: 1; transition: transform 0.15s; }
-  .nav-label { font-size: 0.54rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; transition: color 0.15s; }
+  .nav-icon { font-size: 1.15rem; line-height: 1; transition: transform 0.15s; }
+  .nav-label { font-size: 0.48rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; transition: color 0.15s; }
   .nav-item.active .nav-label { color: var(--accent); }
   .nav-item.active .nav-icon { transform: scale(1.14); }
   .nav-item:active { opacity: 0.65; }
@@ -179,7 +185,7 @@
 <div class="page active" id="page-dash">
   <div class="greeting">
     <div class="greeting-sub" id="dash-greeting">Good morning</div>
-    <div class="greeting-main">Adam <em>&</em><br>Brittany</div>
+    <div class="greeting-main">Adam <em>&amp;</em><br>Brittany</div>
   </div>
   <div class="content">
     <div class="dash-quote">
@@ -187,23 +193,20 @@
       <span id="dash-quote-author"></span>
     </div>
     <div class="stat-row">
-      <!-- G fix: Tasks Open clickable → tasks page -->
       <div class="stat-card clickable" onclick="navTo('tasks')">
         <div class="stat-num gold" id="dash-tasks-open">0</div>
         <div class="stat-label">Tasks Open</div>
         <div class="stat-hint">Tap to view →</div>
       </div>
       <div class="stat-card">
-        <!-- F fix: done count updates on toggle -->
         <div class="stat-num green" id="dash-tasks-done">0</div>
         <div class="stat-label">Done Today</div>
       </div>
     </div>
     <div class="stat-row">
-      <!-- G fix: Bills clickable → money page -->
       <div class="stat-card clickable" onclick="navTo('money')">
         <div class="stat-num rose" id="dash-bills-total">$0</div>
-        <div class="stat-label">Bills This Month</div>
+        <div class="stat-label">Bills Due</div>
         <div class="stat-hint">Tap to view →</div>
       </div>
       <div class="stat-card">
@@ -233,7 +236,6 @@
       <button class="tab-pill" onclick="filterTasks('both',this)">Together</button>
     </div>
     <div class="card" id="task-list"><div class="empty">Add your first task below</div></div>
-    <!-- B fix: owner selector as pill buttons, not a broken select -->
     <div style="margin-top:12px;">
       <div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Assign to</div>
       <div class="owner-row">
@@ -263,8 +265,8 @@
       <div class="section-title">This Month</div>
       <div class="card" id="bills-list"><div class="empty">No bills yet — add one below</div></div>
       <div class="add-row">
-        <input class="add-input" placeholder="Bill name…" id="bill-name-in">
-        <input class="add-input" placeholder="$" style="max-width:72px;" id="bill-amt-in" type="number" inputmode="decimal">
+        <input class="add-input" placeholder="Bill name…" id="bill-name-in" onkeydown="if(event.key==='Enter')addBill()">
+        <input class="add-input" placeholder="$" style="max-width:72px;" id="bill-amt-in" type="number" inputmode="decimal" onkeydown="if(event.key==='Enter')addBill()">
         <button class="add-btn" onclick="addBill()">+</button>
       </div>
     </div>
@@ -324,8 +326,8 @@
     <div class="section-title">Add Event</div>
     <div class="card">
       <div class="add-row" style="margin:0;flex-wrap:wrap;gap:8px;">
-        <input class="add-input" id="plan-date" placeholder="Apr 18" style="max-width:100px;">
-        <input class="add-input" id="plan-title" placeholder="What's happening…" style="flex:1;min-width:130px;">
+        <input class="add-input" id="plan-date" type="date" style="max-width:150px;">
+        <input class="add-input" id="plan-title" placeholder="What's happening…" style="flex:1;min-width:130px;" onkeydown="if(event.key==='Enter')addPlan()">
         <button class="add-btn" onclick="addPlan()">+</button>
       </div>
       <input class="add-input" id="plan-note" placeholder="Note (optional)" style="width:100%;margin-top:8px;">
@@ -333,7 +335,7 @@
   </div>
 </div>
 
-<!-- HOME -->
+<!-- HOME (Chores/Projects) -->
 <div class="page" id="page-home">
   <div class="page-header"><div class="page-title">Home</div></div>
   <div class="content">
@@ -375,15 +377,16 @@
     <div class="card">
       <div class="add-row" style="margin:0;flex-wrap:wrap;gap:8px;">
         <input class="add-input" id="goal-name-in" placeholder="Goal name…" style="flex:1;min-width:130px;">
-        <select class="add-input" id="goal-cat-in" style="max-width:130px;flex-shrink:0;">
+        <select class="add-input" id="goal-cat-in" style="max-width:130px;flex-shrink:0;" onchange="updateGoalLabels()">
           <option value="financial">Financial</option>
           <option value="life">Life</option>
           <option value="relationship">Relationship</option>
         </select>
       </div>
       <div class="add-row" style="margin-top:8px;">
-        <input class="add-input" id="goal-current-in" placeholder="Saved so far $" type="number" inputmode="decimal">
-        <input class="add-input" id="goal-target-in" placeholder="Target $" type="number" inputmode="decimal">
+        <input class="add-input" id="goal-current-in" placeholder="Current…" type="number" inputmode="decimal">
+        <input class="add-input" id="goal-target-in" placeholder="Target…" type="number" inputmode="decimal">
+        <input class="add-input" id="goal-unit-in" placeholder="Unit ($, books…)" style="max-width:100px;">
         <button class="add-btn" onclick="addGoal()">+</button>
       </div>
     </div>
@@ -405,10 +408,10 @@
   </div>
 </div>
 
-<!-- BOTTOM NAV — E fix: all 6 tabs have emojis -->
+<!-- BOTTOM NAV — all 8 pages accessible -->
 <nav class="bottom-nav">
   <button class="nav-item active" id="nav-dash" onclick="navTo('dash')">
-    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+    <span class="nav-icon">📊</span><span class="nav-label">Dash</span>
   </button>
   <button class="nav-item" id="nav-tasks" onclick="navTo('tasks')">
     <span class="nav-icon">✅</span><span class="nav-label">Tasks</span>
@@ -422,14 +425,55 @@
   <button class="nav-item" id="nav-plans" onclick="navTo('plans')">
     <span class="nav-icon">📅</span><span class="nav-label">Plans</span>
   </button>
+  <button class="nav-item" id="nav-home" onclick="navTo('home')">
+    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+  </button>
   <button class="nav-item" id="nav-goals" onclick="navTo('goals')">
     <span class="nav-icon">🎯</span><span class="nav-label">Goals</span>
+  </button>
+  <button class="nav-item" id="nav-accounts" onclick="navTo('accounts')">
+    <span class="nav-icon">🔑</span><span class="nav-label">Accts</span>
   </button>
 </nav>
 
 </div>
 
 <script>
+// ── XSS protection ──
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ── localStorage persistence ──
+const STORAGE_KEY = 'ourgrowth_v3';
+function saveAll() {
+  const data = { tasks, notes, groceryItems, discussItems, bills, subs, goalsFinancial, goalsLife, goalsRelationship, accounts, chores, projects, plans };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function loadAll() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    tasks = d.tasks || [];
+    notes = d.notes || [];
+    groceryItems = d.groceryItems || [];
+    discussItems = d.discussItems || [];
+    bills = d.bills || [];
+    subs = d.subs || [];
+    goalsFinancial = d.goalsFinancial || [];
+    goalsLife = d.goalsLife || [];
+    goalsRelationship = d.goalsRelationship || [];
+    accounts = d.accounts || [];
+    chores = d.chores || [];
+    projects = d.projects || [];
+    plans = d.plans || [];
+  } catch(e) {}
+}
+
+// ── Quotes ──
 const QUOTES = [
   { q: "A small daily task, if it be really daily, will beat the labours of a spasmodic Hercules.", a: "Anthony Trollope" },
   { q: "We do not remember days, we remember moments.", a: "Cesare Pavese" },
@@ -441,7 +485,7 @@ const QUOTES = [
   { q: "The whole is greater than the sum of its parts.", a: "Aristotle" },
 ];
 
-// C fix: all state starts empty — no placeholder data
+// ── State ──
 let tasks = [];
 let notes = [];
 let groceryItems = [];
@@ -452,368 +496,509 @@ let goalsFinancial = [];
 let goalsLife = [];
 let goalsRelationship = [];
 let accounts = [];
+let chores = [];
+let projects = [];
+let plans = [];
 let currentTaskFilter = "all";
 let currentOwner = "adam";
 
+// ── Init ──
 (function init() {
+  loadAll();
   const now = new Date();
   const h = now.getHours();
   document.getElementById("dash-greeting").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
   document.getElementById("tasks-date").textContent = now.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
   const q = QUOTES[now.getDate() % QUOTES.length];
-  document.getElementById("dash-quote-text").textContent = `"${q.q}"`;
-  document.getElementById("dash-quote-author").textContent = q.a ? `— ${q.a}` : "";
+  document.getElementById("dash-quote-text").textContent = '"' + q.q + '"';
+  document.getElementById("dash-quote-author").textContent = q.a ? "— " + q.a : "";
+  renderAll();
+})();
+
+function renderAll() {
   updateDashStats();
   renderTasks();
   renderTaskPreview();
   renderNotes();
   renderGrocery();
   renderDiscuss();
-})();
+  renderBills();
+  updateBillTotal();
+  renderSubs();
+  renderGoalsAll();
+  renderDashGoals();
+  renderChores();
+  renderProjects();
+  renderPlans();
+  renderAccounts();
+  updateNextEvent();
+}
 
+// ── Navigation ──
 function navTo(id) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
+  document.querySelectorAll(".nav-item").forEach(function(n) { n.classList.remove("active"); });
   document.getElementById("page-" + id).classList.add("active");
-  const b = document.getElementById("nav-" + id);
+  var b = document.getElementById("nav-" + id);
   if (b) b.classList.add("active");
   window.scrollTo(0, 0);
 }
 
-// B fix: pill-based owner selection, no broken select dropdown
+// ── Owner selection ──
 function setOwner(owner, btn) {
   currentOwner = owner;
-  document.querySelectorAll(".owner-pill").forEach(p => p.className = "owner-pill");
+  document.querySelectorAll(".owner-pill").forEach(function(p) { p.className = "owner-pill"; });
   btn.classList.add("sel-" + owner);
 }
 
-// A fix: full row is click target
+// ── Tasks ──
 function renderTasks() {
-  const list = document.getElementById("task-list");
-  const src = currentTaskFilter === "all" ? tasks : tasks.filter(t => t.owner === currentTaskFilter);
+  var list = document.getElementById("task-list");
+  var src = currentTaskFilter === "all" ? tasks : tasks.filter(function(t) { return t.owner === currentTaskFilter; });
   if (!src.length) { list.innerHTML = '<div class="empty">No tasks here — add one below</div>'; return; }
-  list.innerHTML = src.map(t => {
-    const i = tasks.indexOf(t);
-    const tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
-    const ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
-    return `<div class="task-item" onclick="toggleTask(${i})">
-      <div class="task-check${t.done?" done":""}"></div>
-      <div class="task-text${t.done?" done":""}">${t.text}</div>
-      <span class="task-tag ${tc}">${ol}</span>
-    </div>`;
+  list.innerHTML = src.map(function(t) {
+    var i = tasks.indexOf(t);
+    var tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
+    var ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
+    return '<div class="task-item" onclick="toggleTask('+i+')">' +
+      '<div class="task-check'+(t.done?" done":"")+'"></div>' +
+      '<div class="task-text'+(t.done?" done":"")+'">' + esc(t.text) + '</div>' +
+      '<span class="task-tag '+tc+'">' + ol + '</span>' +
+      '<button class="del-btn" onclick="event.stopPropagation();deleteTask('+i+')">×</button>' +
+    '</div>';
   }).join("");
 }
 
 function renderTaskPreview() {
-  const el = document.getElementById("dash-task-preview");
-  const open = tasks.filter(t => !t.done).slice(0, 3);
+  var el = document.getElementById("dash-task-preview");
+  var open = tasks.filter(function(t) { return !t.done; }).slice(0, 3);
   if (!open.length) {
     el.innerHTML = tasks.length ? '<div class="empty">All done! 🎉</div>' : '<div class="empty">Add tasks to see them here</div>';
     return;
   }
-  el.innerHTML = open.map(t => {
-    const i = tasks.indexOf(t);
-    const tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
-    const ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
-    return `<div class="task-item" onclick="toggleTask(${i})">
-      <div class="task-check${t.done?" done":""}"></div>
-      <div class="task-text">${t.text}</div>
-      <span class="task-tag ${tc}">${ol}</span>
-    </div>`;
+  el.innerHTML = open.map(function(t) {
+    var i = tasks.indexOf(t);
+    var tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
+    var ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
+    return '<div class="task-item" onclick="toggleTask('+i+')">' +
+      '<div class="task-check'+(t.done?" done":"")+'"></div>' +
+      '<div class="task-text">' + esc(t.text) + '</div>' +
+      '<span class="task-tag '+tc+'">' + ol + '</span>' +
+    '</div>';
   }).join("");
 }
 
 function filterTasks(owner, btn) {
   currentTaskFilter = owner;
-  document.querySelectorAll("#task-tabs .tab-pill").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("#task-tabs .tab-pill").forEach(function(p) { p.classList.remove("active"); });
   btn.classList.add("active");
   renderTasks();
 }
 
-// F fix: toggleTask updates done counter immediately
 function toggleTask(i) {
   tasks[i].done = !tasks[i].done;
+  tasks[i].doneAt = tasks[i].done ? new Date().toISOString() : null;
   renderTasks();
   renderTaskPreview();
   updateDashStats();
+  saveAll();
+}
+
+function deleteTask(i) {
+  tasks.splice(i, 1);
+  renderTasks();
+  renderTaskPreview();
+  updateDashStats();
+  saveAll();
 }
 
 function addTask() {
-  const input = document.getElementById("task-input");
-  const text = input.value.trim();
+  var input = document.getElementById("task-input");
+  var text = input.value.trim();
   if (!text) return;
-  tasks.unshift({ text, owner: currentOwner, done: false });
+  tasks.unshift({ text: text, owner: currentOwner, done: false, doneAt: null, createdAt: new Date().toISOString() });
   input.value = "";
   renderTasks();
   renderTaskPreview();
   updateDashStats();
+  saveAll();
 }
 
-// F fix: both open and done update live on every toggle
 function updateDashStats() {
-  document.getElementById("dash-tasks-open").textContent = tasks.filter(t => !t.done).length;
-  document.getElementById("dash-tasks-done").textContent = tasks.filter(t => t.done).length;
+  var today = new Date().toDateString();
+  var doneToday = tasks.filter(function(t) { return t.done && t.doneAt && new Date(t.doneAt).toDateString() === today; }).length;
+  document.getElementById("dash-tasks-open").textContent = tasks.filter(function(t) { return !t.done; }).length;
+  document.getElementById("dash-tasks-done").textContent = doneToday;
 }
 
+// ── Bills ──
 function renderBills() {
-  const list = document.getElementById("bills-list");
+  var list = document.getElementById("bills-list");
   if (!bills.length) { list.innerHTML = '<div class="empty">No bills yet — add one below</div>'; return; }
-  list.innerHTML = bills.map(b => `
-    <div class="bill-item">
-      <div><div class="bill-name">${b.name}</div><div class="bill-sub">${b.date}</div></div>
-      <div class="bill-amount">$${b.amount}</div>
-    </div>`).join("");
+  list.innerHTML = bills.map(function(b, i) {
+    return '<div class="bill-item">' +
+      '<div style="flex:1;min-width:0;"><div class="bill-name">' + esc(b.name) + '</div><div class="bill-sub">' + esc(b.date||'') + '</div></div>' +
+      '<div class="bill-amount ' + (b.paid?'ok':'due') + '">$' + Number(b.amount||0).toFixed(0) + '</div>' +
+      '<button class="bill-paid-btn ' + (b.paid?'paid':'unpaid') + '" onclick="toggleBillPaid('+i+')">' + (b.paid?'Paid':'Due') + '</button>' +
+      '<button class="del-btn" onclick="deleteBill('+i+')">×</button>' +
+    '</div>';
+  }).join("");
 }
+
+function toggleBillPaid(i) { bills[i].paid = !bills[i].paid; renderBills(); updateBillTotal(); saveAll(); }
+function deleteBill(i) { bills.splice(i, 1); renderBills(); updateBillTotal(); saveAll(); }
 
 function addBill() {
-  const name = document.getElementById("bill-name-in").value.trim();
-  const amt = document.getElementById("bill-amt-in").value.trim();
+  var name = document.getElementById("bill-name-in").value.trim();
+  var amt = document.getElementById("bill-amt-in").value.trim();
   if (!name) return;
-  const now = new Date();
-  bills.push({ name, amount: parseFloat(amt)||0, date: now.toLocaleDateString("en-US",{month:"short",day:"numeric"}) });
+  bills.push({ name: name, amount: parseFloat(amt)||0, date: new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}), paid: false });
   document.getElementById("bill-name-in").value = "";
   document.getElementById("bill-amt-in").value = "";
   renderBills();
   updateBillTotal();
+  saveAll();
 }
 
 function updateBillTotal() {
-  const total = bills.reduce((s,b) => s + parseFloat(b.amount||0), 0);
-  document.getElementById("dash-bills-total").textContent = "$" + total.toFixed(0);
+  var due = bills.filter(function(b) { return !b.paid; }).reduce(function(s,b) { return s + parseFloat(b.amount||0); }, 0);
+  document.getElementById("dash-bills-total").textContent = "$" + due.toFixed(0);
 }
 
+// ── Subscriptions ──
+function renderSubs() {
+  var list = document.getElementById("subs-list");
+  if (!subs.length) { list.innerHTML = '<div class="empty">No subscriptions yet</div>'; return; }
+  list.innerHTML = subs.map(function(s, i) {
+    return '<div class="bill-item">' +
+      '<div style="flex:1;min-width:0;"><div class="bill-name">' + esc(s.name) + '</div><div class="bill-sub">' + esc(s.owner||'') + '</div></div>' +
+      '<div class="bill-amount">$' + Number(s.amount||0).toFixed(0) + '</div>' +
+      '<button class="del-btn" onclick="deleteSub('+i+')">×</button>' +
+    '</div>';
+  }).join("");
+}
+
+function deleteSub(i) { subs.splice(i, 1); renderSubs(); saveAll(); }
+
 function addSub() {
-  const name = document.getElementById("sub-name-in").value.trim();
-  const owner = document.getElementById("sub-owner-in").value.trim();
-  const amt = document.getElementById("sub-amt-in").value.trim();
+  var name = document.getElementById("sub-name-in").value.trim();
+  var owner = document.getElementById("sub-owner-in").value.trim();
+  var amt = document.getElementById("sub-amt-in").value.trim();
   if (!name) return;
-  subs.push({ name, owner, amount: parseFloat(amt)||0 });
+  subs.push({ name: name, owner: owner, amount: parseFloat(amt)||0 });
   document.getElementById("sub-name-in").value = "";
   document.getElementById("sub-owner-in").value = "";
   document.getElementById("sub-amt-in").value = "";
-  const list = document.getElementById("subs-list");
-  list.innerHTML = subs.map(s => `
-    <div class="bill-item">
-      <div><div class="bill-name">${s.name}</div><div class="bill-sub">${s.owner}</div></div>
-      <div class="bill-amount">$${s.amount}</div>
-    </div>`).join("");
+  renderSubs();
+  saveAll();
 }
 
 function moneyTab(tab, btn) {
-  document.querySelectorAll("#page-money .tab-pill").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("#page-money .tab-pill").forEach(function(p) { p.classList.remove("active"); });
   btn.classList.add("active");
-  ["bills","mgoals","subs"].forEach(t => {
+  ["bills","mgoals","subs"].forEach(function(t) {
     document.getElementById("money-"+t).style.display = t===tab ? "block" : "none";
   });
   if (tab === "mgoals") renderSavingsGoals();
 }
 
 function renderSavingsGoals() {
-  const list = document.getElementById("savings-list");
+  var list = document.getElementById("savings-list");
   if (!goalsFinancial.length) { list.innerHTML = '<div class="empty">Add goals in the Goals tab</div>'; return; }
-  list.innerHTML = goalsFinancial.map(g => {
-    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
-    return `<div class="goal-item">
-      <div class="goal-top"><span class="goal-name">${g.name}</span><span class="goal-pct">${pct}%</span></div>
-      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
-      <div class="goal-meta"><span>$${g.current.toLocaleString()} of $${g.target.toLocaleString()}</span></div>
-    </div>`;
+  list.innerHTML = goalsFinancial.map(function(g) {
+    var pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    var unit = g.unit || '$';
+    var fmtC = unit === '$' ? ('$' + Number(g.current).toLocaleString()) : (Number(g.current).toLocaleString() + ' ' + esc(unit));
+    var fmtT = unit === '$' ? ('$' + Number(g.target).toLocaleString()) : (Number(g.target).toLocaleString() + ' ' + esc(unit));
+    return '<div class="goal-item">' +
+      '<div class="goal-top"><span class="goal-name">' + esc(g.name) + '</span><span class="goal-pct">' + pct + '%</span></div>' +
+      '<div class="goal-bar-track"><div class="goal-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="goal-meta"><span>' + fmtC + ' of ' + fmtT + '</span></div>' +
+    '</div>';
   }).join("");
 }
 
+// ── Goals ──
 function addGoal() {
-  const name = document.getElementById("goal-name-in").value.trim();
-  const cat = document.getElementById("goal-cat-in").value;
-  const current = parseFloat(document.getElementById("goal-current-in").value)||0;
-  const target = parseFloat(document.getElementById("goal-target-in").value)||0;
+  var name = document.getElementById("goal-name-in").value.trim();
+  var cat = document.getElementById("goal-cat-in").value;
+  var current = parseFloat(document.getElementById("goal-current-in").value)||0;
+  var target = parseFloat(document.getElementById("goal-target-in").value)||0;
+  var unit = document.getElementById("goal-unit-in").value.trim() || (cat === 'financial' ? '$' : '');
   if (!name) return;
-  const g = { name, current, target };
+  var g = { name: name, current: current, target: target, unit: unit };
   if (cat==="financial") goalsFinancial.push(g);
   else if (cat==="life") goalsLife.push(g);
   else goalsRelationship.push(g);
   document.getElementById("goal-name-in").value = "";
   document.getElementById("goal-current-in").value = "";
   document.getElementById("goal-target-in").value = "";
+  document.getElementById("goal-unit-in").value = "";
   renderGoalsAll();
   renderDashGoals();
+  saveAll();
+}
+
+function updateGoalLabels() {
+  var cat = document.getElementById("goal-cat-in").value;
+  document.getElementById("goal-unit-in").placeholder = cat === 'financial' ? 'Unit ($)' : 'Unit (books, dates…)';
+}
+
+function deleteGoal(cat, i) {
+  if (cat==="financial") goalsFinancial.splice(i,1);
+  else if (cat==="life") goalsLife.splice(i,1);
+  else goalsRelationship.splice(i,1);
+  renderGoalsAll();
+  renderDashGoals();
+  saveAll();
 }
 
 function renderGoalsAll() {
-  renderGoalSection("goals-financial", goalsFinancial, "");
-  renderGoalSection("goals-life", goalsLife, "green");
-  renderGoalSection("goals-relationship", goalsRelationship, "rose");
+  renderGoalSection("goals-financial", goalsFinancial, "", "financial");
+  renderGoalSection("goals-life", goalsLife, "green", "life");
+  renderGoalSection("goals-relationship", goalsRelationship, "rose", "relationship");
 }
 
-function renderGoalSection(elId, arr, cls) {
-  const el = document.getElementById(elId);
+function renderGoalSection(elId, arr, cls, catKey) {
+  var el = document.getElementById(elId);
   if (!arr.length) { el.innerHTML = '<div class="empty">No goals yet</div>'; return; }
-  el.innerHTML = arr.map(g => {
-    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
-    return `<div class="goal-item">
-      <div class="goal-top"><span class="goal-name">${g.name}</span><span class="goal-pct">${pct}%</span></div>
-      <div class="goal-bar-track"><div class="goal-bar-fill ${cls}" style="width:${pct}%"></div></div>
-      <div class="goal-meta"><span>$${g.current.toLocaleString()} of $${g.target.toLocaleString()}</span></div>
-    </div>`;
+  el.innerHTML = arr.map(function(g, i) {
+    var pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    var unit = g.unit || '$';
+    function fmtVal(v) { return unit === '$' ? ('$' + Number(v).toLocaleString()) : (Number(v).toLocaleString() + ' ' + esc(unit)); }
+    return '<div class="goal-item">' +
+      '<div class="goal-top">' +
+        '<span class="goal-name">' + esc(g.name) + '</span>' +
+        '<span style="display:flex;align-items:center;gap:8px;">' +
+          '<span class="goal-pct">' + pct + '%</span>' +
+          '<button class="del-btn" onclick="deleteGoal(\''+catKey+'\','+i+')">×</button>' +
+        '</span>' +
+      '</div>' +
+      '<div class="goal-bar-track"><div class="goal-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="goal-meta"><span>' + fmtVal(g.current) + ' of ' + fmtVal(g.target) + '</span></div>' +
+    '</div>';
   }).join("");
 }
 
 function renderDashGoals() {
-  const el = document.getElementById("dash-goals-preview");
-  const all = [...goalsFinancial, ...goalsLife, ...goalsRelationship].slice(0, 2);
+  var el = document.getElementById("dash-goals-preview");
+  var all = [].concat(goalsFinancial, goalsLife, goalsRelationship).slice(0, 2);
   if (!all.length) { el.innerHTML = '<div class="empty">Add goals to track progress</div>'; return; }
-  el.innerHTML = all.map(g => {
-    const pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
-    return `<div style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:0.82rem;">${g.name}</span>
-        <span style="font-family:'Cormorant Garamond',serif;color:var(--accent);">${pct}%</span>
-      </div>
-      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
-    </div>`;
+  el.innerHTML = all.map(function(g) {
+    var pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
+    return '<div style="margin-bottom:12px;">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+        '<span style="font-size:0.82rem;">' + esc(g.name) + '</span>' +
+        '<span style="font-family:\'Cormorant Garamond\',serif;color:var(--accent);">' + pct + '%</span>' +
+      '</div>' +
+      '<div class="goal-bar-track"><div class="goal-bar-fill" style="width:' + pct + '%"></div></div>' +
+    '</div>';
   }).join("");
 }
 
+// ── Notes ──
 function renderNotes() {
-  const list = document.getElementById("notes-list");
+  var list = document.getElementById("notes-list");
   if (!notes.length) { list.innerHTML = '<div class="empty">Tap below to add a note</div>'; return; }
-  list.innerHTML = notes.map((n,i) => `
-    <div class="note-card">
-      <textarea placeholder="Write something…" oninput="notes[${i}].text=this.value">${n.text}</textarea>
-      <div class="note-footer">
-        <span class="note-time">${n.time}</span>
-        <span class="note-del" onclick="notes.splice(${i},1);renderNotes()">remove</span>
-      </div>
-    </div>`).join("");
+  list.innerHTML = notes.map(function(n,i) {
+    return '<div class="note-card">' +
+      '<textarea placeholder="Write something…" oninput="notes['+i+'].text=this.value;saveAll()">' + esc(n.text) + '</textarea>' +
+      '<div class="note-footer">' +
+        '<span class="note-time">' + esc(n.time) + '</span>' +
+        '<span class="note-del" onclick="notes.splice('+i+',1);renderNotes();saveAll()">remove</span>' +
+      '</div>' +
+    '</div>';
+  }).join("");
 }
 
 function addNote() {
-  const now = new Date();
-  const time = now.toLocaleDateString("en-US",{month:"short",day:"numeric"}) + " · " + now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-  notes.unshift({ text:"", time });
+  var now = new Date();
+  var time = now.toLocaleDateString("en-US",{month:"short",day:"numeric"}) + " · " + now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  notes.unshift({ text:"", time: time });
   renderNotes();
-  const ta = document.querySelector(".note-card textarea");
+  saveAll();
+  var ta = document.querySelector(".note-card textarea");
   if (ta) ta.focus();
 }
 
-function notesTab(tab, btn) {
-  document.querySelectorAll("#page-notes .tab-pill").forEach(p => p.classList.remove("active"));
-  btn.classList.add("active");
-  ["quick","grocery","discuss"].forEach(t => {
-    document.getElementById("notes-"+t).style.display = t===tab ? "block" : "none";
-  });
-}
-
+// ── Grocery ──
 function renderGrocery() {
-  const list = document.getElementById("grocery-list");
+  var list = document.getElementById("grocery-list");
   if (!groceryItems.length) { list.innerHTML = '<div class="empty">List is clear</div>'; return; }
-  list.innerHTML = groceryItems.map((item,i) => `
-    <div class="task-item" onclick="this.querySelector('.task-check').classList.toggle('done');this.querySelector('.task-text').classList.toggle('done')">
-      <div class="task-check"></div>
-      <div class="task-text">${item}</div>
-      <span onclick="event.stopPropagation();groceryItems.splice(${i},1);renderGrocery()" style="font-size:1.1rem;color:var(--text-dim);cursor:pointer;padding:4px 8px;pointer-events:auto;">×</span>
-    </div>`).join("");
+  list.innerHTML = groceryItems.map(function(item,i) {
+    return '<div class="task-item" onclick="groceryItems['+i+'].checked=!groceryItems['+i+'].checked;renderGrocery();saveAll()">' +
+      '<div class="task-check'+(item.checked?' done':'')+'"></div>' +
+      '<div class="task-text'+(item.checked?' done':'')+'">' + esc(item.text) + '</div>' +
+      '<button class="del-btn" onclick="event.stopPropagation();groceryItems.splice('+i+',1);renderGrocery();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
 }
 
 function addGrocery() {
-  const inp = document.getElementById("grocery-in");
-  const v = inp.value.trim();
+  var inp = document.getElementById("grocery-in");
+  var v = inp.value.trim();
   if (!v) return;
-  groceryItems.push(v);
+  groceryItems.push({ text: v, checked: false });
   inp.value = "";
   renderGrocery();
+  saveAll();
 }
 
+// ── To Discuss ──
 function renderDiscuss() {
-  const list = document.getElementById("discuss-list");
+  var list = document.getElementById("discuss-list");
   if (!discussItems.length) { list.innerHTML = '<div class="empty">Nothing to discuss yet</div>'; return; }
-  list.innerHTML = discussItems.map((item,i) => `
-    <div class="task-item" onclick="this.querySelector('.task-check').classList.toggle('done');this.querySelector('.task-text').classList.toggle('done')">
-      <div class="task-check"></div>
-      <div class="task-text">${item}</div>
-      <span onclick="event.stopPropagation();discussItems.splice(${i},1);renderDiscuss()" style="font-size:1.1rem;color:var(--text-dim);cursor:pointer;padding:4px 8px;pointer-events:auto;">×</span>
-    </div>`).join("");
+  list.innerHTML = discussItems.map(function(item,i) {
+    return '<div class="task-item" onclick="discussItems['+i+'].checked=!discussItems['+i+'].checked;renderDiscuss();saveAll()">' +
+      '<div class="task-check'+(item.checked?' done':'')+'"></div>' +
+      '<div class="task-text'+(item.checked?' done':'')+'">' + esc(item.text) + '</div>' +
+      '<button class="del-btn" onclick="event.stopPropagation();discussItems.splice('+i+',1);renderDiscuss();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
 }
 
 function addDiscuss() {
-  const inp = document.getElementById("discuss-in");
-  const v = inp.value.trim();
+  var inp = document.getElementById("discuss-in");
+  var v = inp.value.trim();
   if (!v) return;
-  discussItems.push(v);
+  discussItems.push({ text: v, checked: false });
   inp.value = "";
   renderDiscuss();
+  saveAll();
+}
+
+// ── Plans ──
+function renderPlans() {
+  var list = document.getElementById("plans-list");
+  if (!plans.length) { list.innerHTML = '<div class="empty">No events yet</div>'; return; }
+  var sorted = plans.slice().sort(function(a,b) { return new Date(a.dateISO||0) - new Date(b.dateISO||0); });
+  list.innerHTML = sorted.map(function(p) {
+    var oi = plans.indexOf(p);
+    return '<div class="event-item">' +
+      '<div class="event-date-block"><div class="event-day">' + esc(p.day) + '</div><div class="event-mon">' + esc(p.mon) + '</div></div>' +
+      '<div style="flex:1;min-width:0;"><div class="event-title">' + esc(p.title) + '</div><div class="event-desc">' + esc(p.note||'') + '</div></div>' +
+      '<button class="del-btn" onclick="plans.splice('+oi+',1);renderPlans();updateNextEvent();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
 }
 
 function addPlan() {
-  const date = document.getElementById("plan-date").value.trim();
-  const title = document.getElementById("plan-title").value.trim();
-  const note = document.getElementById("plan-note").value.trim();
+  var dateEl = document.getElementById("plan-date");
+  var title = document.getElementById("plan-title").value.trim();
+  var note = document.getElementById("plan-note").value.trim();
   if (!title) return;
-  const list = document.getElementById("plans-list");
-  if (list.querySelector(".empty")) list.innerHTML = "";
-  const parts = date.split(" ");
-  const div = document.createElement("div");
-  div.className = "event-item";
-  div.innerHTML = `<div class="event-date-block"><div class="event-day">${parts[1]||date||"—"}</div><div class="event-mon">${parts[0]||""}</div></div>
-    <div><div class="event-title">${title}</div><div class="event-desc">${note}</div></div>`;
-  list.appendChild(div);
-  document.getElementById("plan-date").value = "";
+
+  var dateISO = '', day = '—', mon = '';
+  if (dateEl.value) {
+    var d = new Date(dateEl.value + 'T12:00:00');
+    dateISO = d.toISOString();
+    day = d.getDate().toString();
+    mon = d.toLocaleDateString("en-US",{month:"short"}).toUpperCase();
+  }
+
+  plans.push({ title: title, note: note, dateISO: dateISO, day: day, mon: mon });
+  dateEl.value = "";
   document.getElementById("plan-title").value = "";
   document.getElementById("plan-note").value = "";
+  renderPlans();
+  updateNextEvent();
+  saveAll();
 }
 
+function updateNextEvent() {
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  var upcoming = plans.filter(function(p) { return p.dateISO && new Date(p.dateISO) >= now; })
+    .sort(function(a,b) { return new Date(a.dateISO) - new Date(b.dateISO); });
+  var el = document.getElementById("dash-next-event");
+  if (upcoming.length) {
+    var diff = Math.ceil((new Date(upcoming[0].dateISO) - now) / (1000*60*60*24));
+    el.textContent = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff + 'd';
+  } else {
+    el.textContent = '—';
+  }
+}
+
+// ── Home: Chores & Projects ──
 function homeTab(tab, btn) {
-  document.querySelectorAll("#page-home .tab-pill").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll("#page-home .tab-pill").forEach(function(p) { p.classList.remove("active"); });
   btn.classList.add("active");
-  ["chores","projects"].forEach(t => {
+  ["chores","projects"].forEach(function(t) {
     document.getElementById("home-"+t).style.display = t===tab ? "block" : "none";
   });
 }
 
+function renderChores() {
+  var list = document.getElementById("chores-list");
+  if (!chores.length) { list.innerHTML = '<div class="empty">No chores yet</div>'; return; }
+  var icons = {Daily:"🍽️",Weekly:"🧹",Biweekly:"🧼",Monthly:"🗑️"};
+  list.innerHTML = chores.map(function(c, i) {
+    return '<div class="chore-item'+(c.done?' chore-done':'')+'" onclick="chores['+i+'].done=!chores['+i+'].done;renderChores();saveAll()">' +
+      '<span class="chore-icon">' + (icons[c.freq]||"📋") + '</span>' +
+      '<span class="chore-text">' + esc(c.text) + '</span>' +
+      '<span class="chore-freq">' + esc(c.freq) + '</span>' +
+      '<button class="del-btn" onclick="event.stopPropagation();chores.splice('+i+',1);renderChores();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
+}
+
 function addChore() {
-  const inp = document.getElementById("chore-in");
-  const freq = document.getElementById("chore-freq").value;
-  const v = inp.value.trim();
+  var inp = document.getElementById("chore-in");
+  var freq = document.getElementById("chore-freq").value;
+  var v = inp.value.trim();
   if (!v) return;
-  const list = document.getElementById("chores-list");
-  if (list.querySelector(".empty")) list.innerHTML = "";
-  const icons = {Daily:"🍽️",Weekly:"🧹",Biweekly:"🧼",Monthly:"🗑️"};
-  const div = document.createElement("div");
-  div.className = "chore-item";
-  div.onclick = function(){ this.style.opacity = this.style.opacity==="0.4" ? "1" : "0.4"; };
-  div.innerHTML = `<span class="chore-icon">${icons[freq]||"📋"}</span><span class="chore-text">${v}</span><span class="chore-freq">${freq}</span>`;
-  list.appendChild(div);
+  chores.push({ text: v, freq: freq, done: false });
   inp.value = "";
+  renderChores();
+  saveAll();
+}
+
+function renderProjects() {
+  var list = document.getElementById("projects-list");
+  if (!projects.length) { list.innerHTML = '<div class="empty">No projects yet</div>'; return; }
+  list.innerHTML = projects.map(function(p, i) {
+    return '<div class="task-item" onclick="projects['+i+'].done=!projects['+i+'].done;renderProjects();saveAll()">' +
+      '<div class="task-check'+(p.done?' done':'')+'"></div>' +
+      '<div class="task-text'+(p.done?' done':'')+'">' + esc(p.text) + '</div>' +
+      '<button class="del-btn" onclick="event.stopPropagation();projects.splice('+i+',1);renderProjects();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
 }
 
 function addProject() {
-  const inp = document.getElementById("project-in");
-  const v = inp.value.trim();
+  var inp = document.getElementById("project-in");
+  var v = inp.value.trim();
   if (!v) return;
-  const list = document.getElementById("projects-list");
-  if (list.querySelector(".empty")) list.innerHTML = "";
-  const div = document.createElement("div");
-  div.className = "task-item";
-  div.onclick = function(){ const c=this.querySelector('.task-check'); c.classList.toggle('done'); this.querySelector('.task-text').classList.toggle('done'); };
-  div.innerHTML = `<div class="task-check"></div><div class="task-text">${v}</div>`;
-  list.appendChild(div);
+  projects.push({ text: v, done: false });
   inp.value = "";
+  renderProjects();
+  saveAll();
+}
+
+// ── Accounts ──
+function renderAccounts() {
+  var list = document.getElementById("accounts-list");
+  if (!accounts.length) { list.innerHTML = '<div class="empty">No accounts added yet</div>'; return; }
+  list.innerHTML = accounts.map(function(a, i) {
+    return '<div class="acct-item">' +
+      '<div style="flex:1;min-width:0;"><div class="acct-name">' + esc(a.name) + '</div><div class="acct-sub">' + esc(a.owner||'') + '</div></div>' +
+      '<span class="acct-renew">' + esc(a.renew||'—') + '</span>' +
+      '<button class="del-btn" onclick="accounts.splice('+i+',1);renderAccounts();saveAll()">×</button>' +
+    '</div>';
+  }).join("");
 }
 
 function addAcct() {
-  const name = document.getElementById("acct-name-in").value.trim();
-  const owner = document.getElementById("acct-owner-in").value.trim();
-  const renew = document.getElementById("acct-renew-in").value.trim();
+  var name = document.getElementById("acct-name-in").value.trim();
+  var owner = document.getElementById("acct-owner-in").value.trim();
+  var renew = document.getElementById("acct-renew-in").value.trim();
   if (!name) return;
-  accounts.push({ name, owner, renew });
+  accounts.push({ name: name, owner: owner, renew: renew });
   document.getElementById("acct-name-in").value = "";
   document.getElementById("acct-owner-in").value = "";
   document.getElementById("acct-renew-in").value = "";
-  const list = document.getElementById("accounts-list");
-  list.innerHTML = accounts.map(a => `
-    <div class="acct-item">
-      <div><div class="acct-name">${a.name}</div><div class="acct-sub">${a.owner}</div></div>
-      <span class="acct-renew">${a.renew||"—"}</span>
-    </div>`).join("");
+  renderAccounts();
+  saveAll();
 }
 </script>
 </body>
