@@ -405,8 +405,8 @@
     </div>
     <div id="home-chores">
       <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
-      <div class="add-row">
-        <input class="add-input" id="chore-in" placeholder="Add chore…" onkeydown="if(event.key==='Enter')addChore()">
+      <div class="add-row" style="flex-wrap:wrap;">
+        <input class="add-input" id="chore-in" placeholder="Add chore…" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')addChore()">
         <select class="add-input" id="chore-freq" style="max-width:110px;flex-shrink:0;">
           <option>Daily</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option>
         </select>
@@ -443,10 +443,12 @@
           <option value="relationship">Relationship</option>
         </select>
       </div>
+      <div class="add-row" style="margin-top:8px;flex-wrap:wrap;gap:8px;">
+        <input class="add-input" id="goal-current-in" placeholder="Current…" type="number" inputmode="decimal" style="flex:1;min-width:80px;">
+        <input class="add-input" id="goal-target-in" placeholder="Target…" type="number" inputmode="decimal" style="flex:1;min-width:80px;">
+      </div>
       <div class="add-row" style="margin-top:8px;">
-        <input class="add-input" id="goal-current-in" placeholder="Current…" type="number" inputmode="decimal">
-        <input class="add-input" id="goal-target-in" placeholder="Target…" type="number" inputmode="decimal">
-        <input class="add-input" id="goal-unit-in" placeholder="Unit ($, books…)" style="max-width:100px;">
+        <input class="add-input" id="goal-unit-in" placeholder="Unit ($, books…)" style="flex:1;">
         <button class="add-btn" onclick="addGoal()">+</button>
       </div>
     </div>
