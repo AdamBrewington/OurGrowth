@@ -781,9 +781,12 @@ const SYNC_URL_KEY = 'ourgrowth_sync_url';
 const DEVICE_KEY = 'ourgrowth_device_id';
 const SYNC_POLL_MS = 15000;
 let syncTimer = null;
+let syncIntervalId = null;
 let lastSyncedAt = 0;
 let localStateUpdatedAt = 0;
 let syncInFlight = false;
+let syncBootstrapped = false;
+let pendingSyncPush = false;
 
 function getDeviceId() {
   var existing = localStorage.getItem(DEVICE_KEY);
@@ -810,6 +813,19 @@ function buildState() {
     chores, projects, plans
   };
 }
+function countState(d) {
+  if (!d || typeof d !== 'object') return 0;
+  return [
+    d.tasks, d.notes, d.groceryItems, d.discussItems, d.bills, d.subs,
+    d.goalsFinancial, d.goalsLife, d.goalsRelationship,
+    d.chores, d.projects, d.plans
+  ].reduce(function(total, arr) {
+    return total + (Array.isArray(arr) ? arr.length : 0);
+  }, 0);
+}
+function hasMeaningfulState(d) {
+  return countState(d) > 0;
+}
 function applyState(d) {
   tasks = Array.isArray(d.tasks) ? d.tasks : [];
   notes = Array.isArray(d.notes) ? d.notes : [];
@@ -824,6 +840,9 @@ function applyState(d) {
   projects = Array.isArray(d.projects) ? d.projects : [];
   plans = Array.isArray(d.plans) ? d.plans : [];
 }
+function persistPayload(payload) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch(e) {}
+}
 function saveAll(skipSync) {
   localStateUpdatedAt = Date.now();
   const payload = {
@@ -831,7 +850,7 @@ function saveAll(skipSync) {
     deviceId: DEVICE_ID,
     data: buildState()
   };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch(e) {}
+  persistPayload(payload);
   if (!skipSync) queueSyncPush();
 }
 function loadAll() {
@@ -852,24 +871,60 @@ async function syncPull() {
   syncInFlight = true;
   try {
     const res = await fetch(url, {
-  method: 'GET',
-  cache: 'no-store',
-  headers: {
-    'X-Sync-Token': SYNC_TOKEN
-  }
-});
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        'X-Sync-Token': SYNC_TOKEN
+      }
+    });
     if (!res.ok) throw new Error('pull failed');
     const payload = await res.json();
     if (!payload || !payload.data) {
-      setSyncStatus('Cloud ready');
+      setSyncStatus('Cloud empty');
       return;
     }
+
+    const remoteData = payload.data;
+    const remoteCount = countState(remoteData);
+    const localData = buildState();
+    const localCount = countState(localData);
     const remoteUpdatedAt = payload.updatedAt || 0;
-    if (remoteUpdatedAt > localStateUpdatedAt) {
-      applyState(payload.data);
+
+    if (!remoteCount) {
+      setSyncStatus('Cloud empty');
+      return;
+    }
+
+    // Hard guard: never let a much smaller remote snapshot wipe fuller local data.
+    if (localCount > 0 && remoteCount < Math.ceil(localCount * 0.5) && remoteUpdatedAt >= localStateUpdatedAt) {
+      setSyncStatus('Blocked bad sync');
+      return;
+    }
+
+    // First-load recovery: prefer remote if local is empty and remote is meaningful.
+    if (!hasMeaningfulState(localData) && remoteCount > 0) {
+      applyState(remoteData);
       localStateUpdatedAt = remoteUpdatedAt;
       lastSyncedAt = remoteUpdatedAt;
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch(e) {}
+      persistPayload({
+        updatedAt: remoteUpdatedAt,
+        deviceId: payload.deviceId || DEVICE_ID,
+        data: remoteData
+      });
+      renderAll();
+      setSyncStatus('Recovered cloud data');
+      return;
+    }
+
+    if (remoteUpdatedAt > localStateUpdatedAt) {
+      applyState(remoteData);
+      localStateUpdatedAt = remoteUpdatedAt;
+      lastSyncedAt = remoteUpdatedAt;
+      persistPayload({
+        updatedAt: remoteUpdatedAt,
+        deviceId: payload.deviceId || DEVICE_ID,
+        data: remoteData
+      });
       renderAll();
       setSyncStatus('Pulled latest changes');
     } else {
@@ -879,12 +934,29 @@ async function syncPull() {
     setSyncStatus('Sync unavailable');
   } finally {
     syncInFlight = false;
+    if (!syncBootstrapped) {
+      syncBootstrapped = true;
+      if (pendingSyncPush) {
+        pendingSyncPush = false;
+        queueSyncPush();
+      }
+    }
   }
 }
 async function syncPushNow() {
   const url = getSyncUrl();
-  if (!url || syncInFlight) {
-    setSyncStatus(url ? 'Sync busy…' : 'Local only');
+  if (!url) {
+    setSyncStatus('Local only');
+    return;
+  }
+  if (!syncBootstrapped) {
+    pendingSyncPush = true;
+    setSyncStatus('Waiting for cloud check…');
+    return;
+  }
+  if (syncInFlight) {
+    pendingSyncPush = true;
+    setSyncStatus('Sync busy…');
     return;
   }
   syncInFlight = true;
@@ -895,21 +967,26 @@ async function syncPushNow() {
       data: buildState()
     };
     const res = await fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-Sync-Token': SYNC_TOKEN
-  },
-  body: JSON.stringify(payload)
-});
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Sync-Token': SYNC_TOKEN
+      },
+      body: JSON.stringify(payload)
+    });
     if (!res.ok) throw new Error('push failed');
     const saved = await res.json();
     lastSyncedAt = saved.updatedAt || payload.updatedAt;
+    localStateUpdatedAt = Math.max(localStateUpdatedAt, lastSyncedAt);
     setSyncStatus('Changes synced');
   } catch (e) {
     setSyncStatus('Saved locally only');
   } finally {
     syncInFlight = false;
+    if (pendingSyncPush) {
+      pendingSyncPush = false;
+      queueSyncPush();
+    }
   }
 }
 function queueSyncPush() {
@@ -919,20 +996,24 @@ function queueSyncPush() {
 function startSyncLoop() {
   if (!getSyncUrl()) {
     setSyncStatus('Local only');
+    syncBootstrapped = true;
     return;
   }
   setSyncStatus('Cloud sync enabled');
   syncPull();
-  setInterval(syncPull, SYNC_POLL_MS);
+  if (syncIntervalId) clearInterval(syncIntervalId);
+  syncIntervalId = setInterval(syncPull, SYNC_POLL_MS);
 }
 window.addEventListener('storage', function(e) {
   if (e.key === STORAGE_KEY && e.newValue) {
     try {
       const payload = JSON.parse(e.newValue);
       const changedAt = payload.updatedAt || 0;
+      const incomingData = payload.data || {};
       if (changedAt > localStateUpdatedAt) {
+        if (countState(buildState()) > 0 && countState(incomingData) < Math.ceil(countState(buildState()) * 0.5)) return;
         localStateUpdatedAt = changedAt;
-        applyState(payload.data || {});
+        applyState(incomingData);
         renderAll();
       }
     } catch(err) {}
