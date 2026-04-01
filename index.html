@@ -175,8 +175,61 @@
   .nav-item.active .nav-icon { transform: scale(1.14); }
   .nav-item:active { opacity: 0.65; }
 
-  .bill-overdue { background: rgba(192,90,106,0.06); border-radius: var(--radius-sm); padding: 0 6px; margin: 0 -6px; }
-  .bill-soon { background: rgba(196,154,60,0.08); border-radius: var(--radius-sm); padding: 0 6px; margin: 0 -6px; }
+    /* Bill urgency — 3-state */
+  .bill-item.bill-good .bill-status-btn { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .bill-item.bill-good .bill-amount { color: var(--green); }
+  .bill-item.bill-approaching .bill-status-btn { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .bill-item.bill-approaching .bill-amount { color: var(--accent); }
+  .bill-item.bill-due .bill-status-btn { background: var(--rose-soft); border-color: var(--rose); color: var(--rose); }
+  .bill-item.bill-due .bill-amount { color: var(--rose); }
+  .bill-item.bill-paid .bill-status-btn { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .bill-item.bill-paid .bill-amount { color: var(--text-muted); text-decoration: line-through; opacity:0.6; }
+  .bill-status-btn { font-size:0.6rem; letter-spacing:0.05em; text-transform:uppercase; padding:4px 10px; border-radius:14px; cursor:pointer; border:1px solid; transition:all 0.18s; font-family:'DM Sans',sans-serif; font-weight:500; flex-shrink:0; background:none; }
+  .bill-recurring-tag { font-size:0.55rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent); opacity:0.75; margin-left:5px; }
+  /* Task due badge */
+  .task-due-badge { font-size:0.58rem; letter-spacing:0.05em; padding:2px 7px; border-radius:10px; flex-shrink:0; pointer-events:none; white-space:nowrap; }
+  .task-due-badge.due-ok { background:var(--green-soft); color:var(--green); }
+  .task-due-badge.due-soon { background:var(--accent-soft); color:var(--accent); }
+  .task-due-badge.due-urgent { background:var(--rose-soft); color:var(--rose); }
+  /* Task notes */
+  .task-notes-input { width:100%; background:rgba(0,0,0,0.025); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.82rem; line-height:1.5; resize:none; outline:none; min-height:52px; }
+  .task-notes-input:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft); }
+  .task-notes-input::placeholder { color:var(--text-dim); }
+  .task-note-btn { font-size:0.78rem; cursor:pointer; padding:2px 5px; pointer-events:auto; transition:opacity 0.15s; flex-shrink:0; background:none; border:none; opacity:0.35; }
+  .task-note-btn.has-note { opacity:1; color:var(--accent); }
+  /* Chore owner + streak */
+  .chore-owner { font-size:0.58rem; letter-spacing:0.06em; text-transform:uppercase; padding:2px 7px; border-radius:10px; flex-shrink:0; }
+  .chore-owner.own-adam { background:var(--accent-soft); color:var(--accent); }
+  .chore-owner.own-brit { background:var(--rose-soft); color:var(--rose); }
+  .chore-owner.own-both { background:rgba(0,0,0,0.05); color:var(--text-muted); }
+  .chore-streak { font-size:0.72rem; flex-shrink:0; min-width:28px; text-align:right; }
+  /* Recurring event tag */
+  .event-recurring { font-size:0.58rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--accent); background:var(--accent-dim); padding:2px 6px; border-radius:8px; display:inline-block; margin-top:3px; }
+  /* Today card */
+  .today-item { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .today-item:last-child { border-bottom:none; }
+  .today-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+  .today-dot.red { background:var(--rose); }
+  .today-dot.amber { background:var(--accent); }
+  .today-dot.green { background:var(--green); }
+  .today-label { flex:1; font-size:0.85rem; line-height:1.3; }
+  .today-cat { font-size:0.6rem; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; margin-top:1px; }
+  /* Recap */
+  .recap-row { display:flex; align-items:stretch; }
+  .recap-cell { flex:1; text-align:center; padding:12px 6px; }
+  .recap-num { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:300; line-height:1; }
+  .recap-num.gold { color:var(--accent); }
+  .recap-num.green { color:var(--green); }
+  .recap-lbl { font-size:0.59rem; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; margin-top:3px; }
+  .recap-divider { width:1px; background:var(--border); margin:10px 0; }
+  .recap-section-lbl { font-size:0.6rem; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; text-align:center; padding:6px 0 2px; }
+  /* Goal milestones */
+  .goal-milestones { display:flex; gap:5px; margin-top:8px; align-items:center; }
+  .milestone-pip { width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-size:0.48rem; font-weight:700; color:var(--text-dim); transition:all 0.35s; }
+  .milestone-pip.reached { border-color:var(--accent); background:var(--accent); color:#fff; }
+  .milestone-pip.reached.full { border-color:var(--green); background:var(--green); }
+  @keyframes popIn { 0%{transform:scale(1)} 45%{transform:scale(1.5)} 100%{transform:scale(1)} }
+  .milestone-pip.pop { animation:popIn 0.5s ease; }
 
   /* Notification bell */
   .notif-btn { position: fixed; top: 12px; right: 16px; z-index: 200; background: var(--surface); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.08); transition: all 0.18s; }
@@ -307,10 +360,27 @@
         <div class="stat-label">Next Event</div>
       </div>
     </div>
+    <div class="section-title">Today at a Glance</div>
+    <div class="card" id="dash-today"><div class="empty">Nothing urgent today 🌿</div></div>
     <div class="section-title">Up Next</div>
     <div class="card" id="dash-task-preview"><div class="empty">Add tasks to see them here</div></div>
     <div class="section-title">Goals Snapshot</div>
     <div class="card" id="dash-goals-preview"><div class="empty">Add goals to track progress</div></div>
+    <div class="section-title">Recap</div>
+    <div class="card" id="dash-recap">
+      <div class="recap-section-lbl">Today</div>
+      <div class="recap-row">
+        <div class="recap-cell"><div class="recap-num gold" id="recap-done-today">0</div><div class="recap-lbl">Tasks Done</div></div>
+        <div class="recap-divider"></div>
+        <div class="recap-cell"><div class="recap-num green" id="recap-chores-today">0</div><div class="recap-lbl">Chores Done</div></div>
+      </div>
+      <div class="recap-section-lbl" style="margin-top:6px;">This Week</div>
+      <div class="recap-row">
+        <div class="recap-cell"><div class="recap-num gold" id="recap-done-week">0</div><div class="recap-lbl">Tasks Done</div></div>
+        <div class="recap-divider"></div>
+        <div class="recap-cell"><div class="recap-num green" id="recap-bills-paid">0</div><div class="recap-lbl">Bills Paid</div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -338,8 +408,9 @@
         <button class="owner-pill" id="op-both" onclick="setOwner('both',this)">🤝 Together</button>
       </div>
     </div>
-    <div class="add-row">
-      <input class="add-input" id="task-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTask()">
+    <div class="add-row" style="flex-wrap:wrap;gap:8px;">
+      <input class="add-input" id="task-input" placeholder="Add a task…" style="flex:1;min-width:140px;" onkeydown="if(event.key==='Enter')addTask()">
+      <input class="add-input" type="date" id="task-due-in" style="max-width:148px;" title="Due date (optional)">
       <button class="add-btn" onclick="addTask()">+</button>
     </div>
   </div>
@@ -360,9 +431,13 @@
       <div class="add-row" style="flex-wrap:wrap;gap:8px;">
         <input class="add-input" placeholder="Bill name…" id="bill-name-in" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')addBill()">
         <input class="add-input" placeholder="$" style="max-width:68px;" id="bill-amt-in" type="number" inputmode="decimal">
-        <input class="add-input" type="date" id="bill-due-in" style="max-width:148px;" title="Due date">
+        <input class="add-input" type="date" id="bill-due-in" style="max-width:148px;" title="Due date (day of month)">
         <button class="add-btn" onclick="addBill()">+</button>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:0.78rem;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" id="bill-recurring-in" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
+        Recurring monthly (auto-advances when paid)
+      </label>
     </div>
     <div id="money-mgoals" style="display:none">
       <div class="section-title">Savings Goals</div>
@@ -425,6 +500,10 @@
         <button class="add-btn" onclick="addPlan()">+</button>
       </div>
       <input class="add-input" id="plan-note" placeholder="Note (optional)" style="width:100%;margin-top:8px;">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:0.78rem;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" id="plan-recurring" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
+        Repeat yearly (birthdays, anniversaries…)
+      </label>
     </div>
   </div>
 </div>
@@ -441,8 +520,13 @@
       <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
       <div class="add-row" style="flex-wrap:wrap;gap:8px;">
         <input class="add-input" id="chore-in" placeholder="Add chore…" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')addChore()">
-        <select class="add-input" id="chore-freq" style="max-width:110px;flex-shrink:0;">
+        <select class="add-input" id="chore-freq" style="max-width:105px;flex-shrink:0;">
           <option>Daily</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option>
+        </select>
+        <select class="add-input" id="chore-owner-in" style="max-width:105px;flex-shrink:0;">
+          <option value="both">👥 Both</option>
+          <option value="adam">👤 Adam</option>
+          <option value="brit">👤 Brittany</option>
         </select>
         <input class="add-input" type="date" id="chore-date-in" style="max-width:148px;" title="Next due date">
         <button class="add-btn" onclick="addChore()">+</button>
@@ -691,6 +775,7 @@ function esc(str) {
 }
 
 // ── Local persistence + optional cloud sync ──
+const SYNC_TOKEN = 'khdsbfygrfyigdshfgawufrygiwfgwyirgtysvbkjshgiusghvkjsbgkuhgiuvbSKJbzdkhgfiyg9999999999mmxvnjksbfgkjbs';
 const STORAGE_KEY = 'ourgrowth_v4';
 const SYNC_URL_KEY = 'ourgrowth_sync_url';
 const DEVICE_KEY = 'ourgrowth_device_id';
@@ -766,7 +851,13 @@ async function syncPull() {
   }
   syncInFlight = true;
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, {
+  method: 'GET',
+  cache: 'no-store',
+  headers: {
+    'X-Sync-Token': SYNC_TOKEN
+  }
+});
     if (!res.ok) throw new Error('pull failed');
     const payload = await res.json();
     if (!payload || !payload.data) {
@@ -804,10 +895,13 @@ async function syncPushNow() {
       data: buildState()
     };
     const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Sync-Token': SYNC_TOKEN
+  },
+  body: JSON.stringify(payload)
+});
     if (!res.ok) throw new Error('push failed');
     const saved = await res.json();
     lastSyncedAt = saved.updatedAt || payload.updatedAt;
@@ -892,6 +986,8 @@ function renderAll() {
   updateDashStats();
   renderTasks();
   renderTaskPreview();
+  renderDashToday();
+  renderDashRecap();
   renderNotes();
   renderGrocery();
   renderDiscuss();
@@ -924,9 +1020,30 @@ function setOwner(owner, btn) {
 }
 
 // ── Tasks ──
+var expandedNotes = {};
+function taskDueBadge(t) {
+  if (!t.dueISO) return '';
+  var now = new Date(); now.setHours(0,0,0,0);
+  var due = new Date(t.dueISO); due.setHours(0,0,0,0);
+  var diff = Math.ceil((due - now) / 86400000);
+  var fmt = due.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  if (diff < 0) return '<span class="task-due-badge due-urgent">⚠ ' + fmt + '</span>';
+  if (diff === 0) return '<span class="task-due-badge due-urgent">Today</span>';
+  if (diff === 1) return '<span class="task-due-badge due-soon">Tomorrow</span>';
+  if (diff <= 7) return '<span class="task-due-badge due-soon">' + fmt + '</span>';
+  return '<span class="task-due-badge due-ok">' + fmt + '</span>';
+}
+function toggleTaskNotes(i, event) {
+  event.stopPropagation();
+  expandedNotes[i] = !expandedNotes[i];
+  renderTasks();
+}
+function saveTaskNote(i, val) {
+  if (tasks[i]) { tasks[i].notes = val; saveAll(); }
+}
 function renderTasks() {
-  var list = document.getElementById("task-list");
-  var all = currentTaskFilter === "all" ? tasks : tasks.filter(function(t) { return t.owner === currentTaskFilter; });
+  var list = document.getElementById('task-list');
+  var all = currentTaskFilter === 'all' ? tasks : tasks.filter(function(t) { return t.owner === currentTaskFilter; });
   var src = all.filter(function(t) { return !t.done; });
   if (!src.length) {
     list.innerHTML = all.length ? '<div class="empty">All done! 🎉</div>' : '<div class="empty">No tasks here — add one below</div>';
@@ -934,19 +1051,24 @@ function renderTasks() {
   }
   list.innerHTML = src.map(function(t) {
     var i = tasks.indexOf(t);
-    var tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
-    var ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
-    return '<div class="task-item" id="task-row-'+i+'" onclick="toggleTask('+i+')">' +
+    var tc = {adam:'tag-adam',brit:'tag-brit',home:'tag-home',both:'tag-both'}[t.owner]||'tag-both';
+    var ol = {adam:'Adam',brit:'Brittany',home:'Home',both:'Together'}[t.owner]||'Together';
+    var notesSection = expandedNotes[i]
+      ? '<div style="width:100%;padding:4px 10px 8px 44px;"><textarea class="task-notes-input" placeholder="Add a note…" oninput="saveTaskNote(' + i + ',this.value)">' + esc(t.notes||'') + '</textarea></div>'
+      : '';
+    return '<div class="task-item" id="task-row-' + i + '" style="flex-wrap:wrap;" onclick="toggleTask(' + i + ')">' +
       '<div class="task-check"></div>' +
-      '<div class="task-text">' + esc(t.text) + '</div>' +
-      '<span class="task-tag '+tc+'">' + ol + '</span>' +
-      '<button class="del-btn" onclick="event.stopPropagation();deleteTask('+i+')">×</button>' +
+      '<div class="task-text" style="pointer-events:none;">' + esc(t.text) + '</div>' +
+      taskDueBadge(t) +
+      '<span class="task-tag ' + tc + '">' + ol + '</span>' +
+      '<button class="task-note-btn' + (t.notes ? ' has-note' : '') + '" onclick="toggleTaskNotes(' + i + ',event)" title="Notes">📝</button>' +
+      '<button class="del-btn" onclick="event.stopPropagation();deleteTask(' + i + ')">×</button>' +
+      notesSection +
     '</div>';
-  }).join("");
+  }).join('');
 }
-
 function renderTaskPreview() {
-  var el = document.getElementById("dash-task-preview");
+  var el = document.getElementById('dash-task-preview');
   var open = tasks.filter(function(t) { return !t.done; }).slice(0, 3);
   if (!open.length) {
     el.innerHTML = tasks.length ? '<div class="empty">All done! 🎉</div>' : '<div class="empty">Add tasks to see them here</div>';
@@ -954,148 +1076,205 @@ function renderTaskPreview() {
   }
   el.innerHTML = open.map(function(t) {
     var i = tasks.indexOf(t);
-    var tc = {adam:"tag-adam",brit:"tag-brit",home:"tag-home",both:"tag-both"}[t.owner]||"tag-both";
-    var ol = {adam:"Adam",brit:"Brittany",home:"Home",both:"Together"}[t.owner]||"Together";
-    return '<div class="task-item" onclick="toggleTask('+i+')">' +
-      '<div class="task-check'+(t.done?" done":"")+'"></div>' +
+    var tc = {adam:'tag-adam',brit:'tag-brit',home:'tag-home',both:'tag-both'}[t.owner]||'tag-both';
+    var ol = {adam:'Adam',brit:'Brittany',home:'Home',both:'Together'}[t.owner]||'Together';
+    return '<div class="task-item" onclick="toggleTask(' + i + ')">' +
+      '<div class="task-check"></div>' +
       '<div class="task-text">' + esc(t.text) + '</div>' +
-      '<span class="task-tag '+tc+'">' + ol + '</span>' +
+      taskDueBadge(t) +
+      '<span class="task-tag ' + tc + '">' + ol + '</span>' +
     '</div>';
-  }).join("");
+  }).join('');
 }
-
 function filterTasks(owner, btn) {
   currentTaskFilter = owner;
-  document.querySelectorAll("#task-tabs .tab-pill").forEach(function(p) { p.classList.remove("active"); });
-  btn.classList.add("active");
+  document.querySelectorAll('#task-tabs .tab-pill').forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
   renderTasks();
 }
-
 function toggleTask(i) {
   var wasDone = tasks[i].done;
   tasks[i].done = !wasDone;
   tasks[i].doneAt = tasks[i].done ? new Date().toISOString() : null;
   if (!wasDone) {
-    // Animate row out then re-render
-    var row = document.getElementById("task-row-" + i);
+    var row = document.getElementById('task-row-' + i);
     if (row) {
-      row.style.transition = "opacity 0.35s, transform 0.35s";
-      row.querySelector(".task-check").classList.add("done");
-      row.querySelector(".task-text").classList.add("done");
-      row.style.opacity = "0";
-      row.style.transform = "translateX(24px)";
-      setTimeout(function() {
-        renderTasks();
-        renderTaskPreview();
-        updateDashStats();
-        saveAll();
-      }, 380);
-      updateDashStats();
-      saveAll();
-      return;
+      row.style.transition = 'opacity 0.35s, transform 0.35s';
+      var chk = row.querySelector('.task-check');
+      if (chk) chk.classList.add('done');
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(24px)';
+      setTimeout(function() { renderTasks(); renderTaskPreview(); updateDashStats(); saveAll(); }, 380);
+      updateDashStats(); saveAll(); return;
     }
   }
-  renderTasks();
-  renderTaskPreview();
-  updateDashStats();
-  saveAll();
+  renderTasks(); renderTaskPreview(); updateDashStats(); saveAll();
 }
-
 function deleteTask(i) {
   tasks.splice(i, 1);
-  renderTasks();
-  renderTaskPreview();
-  updateDashStats();
-  saveAll();
+  renderTasks(); renderTaskPreview(); updateDashStats(); saveAll();
 }
-
 function addTask() {
-  var input = document.getElementById("task-input");
+  var input = document.getElementById('task-input');
   var text = input.value.trim();
+  var dueIn = document.getElementById('task-due-in') ? document.getElementById('task-due-in').value : '';
   if (!text) return;
-  tasks.unshift({ text: text, owner: currentOwner, done: false, doneAt: null, createdAt: new Date().toISOString() });
-  input.value = "";
-  renderTasks();
-  renderTaskPreview();
-  updateDashStats();
-  saveAll();
+  var dueISO = dueIn ? new Date(dueIn + 'T12:00:00').toISOString() : '';
+  tasks.unshift({ text: text, owner: currentOwner, done: false, doneAt: null, createdAt: new Date().toISOString(), dueISO: dueISO, notes: '' });
+  input.value = '';
+  if (document.getElementById('task-due-in')) document.getElementById('task-due-in').value = '';
+  renderTasks(); renderTaskPreview(); updateDashStats(); saveAll();
 }
-
 function updateDashStats() {
   var today = new Date().toDateString();
   var doneToday = tasks.filter(function(t) { return t.done && t.doneAt && new Date(t.doneAt).toDateString() === today; }).length;
-  document.getElementById("dash-tasks-open").textContent = tasks.filter(function(t) { return !t.done; }).length;
-  document.getElementById("dash-tasks-done").textContent = doneToday;
+  document.getElementById('dash-tasks-open').textContent = tasks.filter(function(t) { return !t.done; }).length;
+  document.getElementById('dash-tasks-done').textContent = doneToday;
+  renderDashToday();
+  renderDashRecap();
 }
-
+function renderDashToday() {
+  var el = document.getElementById('dash-today');
+  if (!el) return;
+  var now = new Date(); now.setHours(0,0,0,0);
+  var items = [];
+  tasks.filter(function(t) { return !t.done && t.dueISO; }).forEach(function(t) {
+    var diff = Math.ceil((new Date(t.dueISO) - now) / 86400000);
+    if (diff < 0) items.push({dot:'red', label:esc(t.text), cat:'Task overdue'});
+    else if (diff === 0) items.push({dot:'red', label:esc(t.text), cat:'Task due today'});
+    else if (diff === 1) items.push({dot:'amber', label:esc(t.text), cat:'Task due tomorrow'});
+  });
+  chores.forEach(function(ch) {
+    if (!ch.nextDueISO) return;
+    var diff = Math.ceil((new Date(ch.nextDueISO) - now) / 86400000);
+    if (diff < 0) items.push({dot:'red', label:esc(ch.text), cat:'Chore overdue'});
+    else if (diff === 0) items.push({dot:'red', label:esc(ch.text), cat:'Chore due today'});
+    else if (diff === 1) items.push({dot:'amber', label:esc(ch.text), cat:'Chore due tomorrow'});
+  });
+  bills.filter(function(b) { return !b.paid && b.dueISO; }).forEach(function(b) {
+    var diff = Math.ceil((new Date(b.dueISO) - now) / 86400000);
+    var lbl = esc(b.name) + ' · $' + Number(b.amount||0).toFixed(0);
+    if (diff < 0) items.push({dot:'red', label:lbl, cat:'Bill overdue'});
+    else if (diff === 0) items.push({dot:'red', label:lbl, cat:'Bill due today'});
+    else if (diff === 1) items.push({dot:'red', label:lbl, cat:'Bill due tomorrow'});
+    else if (diff <= 7) items.push({dot:'amber', label:lbl, cat:'Bill due in ' + diff + ' days'});
+  });
+  plans.forEach(function(p) {
+    if (!p.dateISO) return;
+    var diff = Math.ceil((new Date(p.dateISO) - now) / 86400000);
+    if (diff === 0) items.push({dot:'green', label:esc(p.title), cat:'Event today'});
+    else if (diff === 1) items.push({dot:'green', label:esc(p.title), cat:'Event tomorrow'});
+  });
+  if (!items.length) { el.innerHTML = '<div class="empty">Nothing urgent today 🌿</div>'; return; }
+  el.innerHTML = items.map(function(it) {
+    return '<div class="today-item"><div class="today-dot ' + it.dot + '"></div><div class="today-label">' + it.label + '<div class="today-cat">' + it.cat + '</div></div></div>';
+  }).join('');
+}
+function renderDashRecap() {
+  var now = new Date();
+  var todayStr = now.toDateString();
+  var weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0,0,0,0);
+  var doneToday = tasks.filter(function(t) { return t.done && t.doneAt && new Date(t.doneAt).toDateString() === todayStr; }).length;
+  var doneWeek  = tasks.filter(function(t) { return t.done && t.doneAt && new Date(t.doneAt) >= weekStart; }).length;
+  var choresToday = chores.filter(function(ch) { return ch.lastDoneISO && new Date(ch.lastDoneISO).toDateString() === todayStr; }).length;
+  var billsPaid = bills.filter(function(b) { return b.paid; }).length;
+  var r = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  r('recap-done-today', doneToday);
+  r('recap-chores-today', choresToday);
+  r('recap-done-week', doneWeek);
+  r('recap-bills-paid', billsPaid);
+}
 // ── Bills ──
-function billUrgencyClass(b) {
-  if (b.paid) return '';
-  if (!b.dueISO) return '';
+function billDaysUntil(b) {
+  if (!b.dueISO) return 999;
   var now = new Date(); now.setHours(0,0,0,0);
   var due = new Date(b.dueISO); due.setHours(0,0,0,0);
-  var diff = Math.ceil((due - now) / 86400000);
-  if (diff < 0) return 'bill-overdue';
-  if (diff <= 3) return 'bill-soon';
-  return '';
+  return Math.ceil((due - now) / 86400000);
 }
-function billDueLabel(b) {
-  if (!b.dueISO) return b.date || '';
+function billUrgencyClass(b) {
+  if (b.paid) return 'bill-paid';
+  var d = billDaysUntil(b);
+  if (d <= 1) return 'bill-due';
+  if (d <= 7) return 'bill-approaching';
+  return 'bill-good';
+}
+function billStatusLabel(b) {
+  if (b.paid) {
+    var suffix = b.recurring && b.dueISO ? ' · Next: ' + new Date(b.dueISO).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    return 'Paid ✓' + suffix;
+  }
+  var d = billDaysUntil(b);
+  var fmt = b.dueISO ? new Date(b.dueISO).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+  if (d < 0) return '⚠ Overdue ' + Math.abs(d) + 'd';
+  if (d === 0) return 'Due Today';
+  if (d === 1) return 'Due Tomorrow';
+  if (d <= 7) return 'Approaching · ' + fmt;
+  return 'Good · ' + fmt;
+}
+function checkBillAutoReset() {
   var now = new Date(); now.setHours(0,0,0,0);
-  var due = new Date(b.dueISO); due.setHours(0,0,0,0);
-  var diff = Math.ceil((due - now) / 86400000);
-  var fmt = due.toLocaleDateString("en-US",{month:"short",day:"numeric"});
-  if (b.paid) return 'Paid · ' + fmt;
-  if (diff < 0) return '⚠ Overdue · ' + fmt;
-  if (diff === 0) return '🔴 Due Today';
-  if (diff === 1) return '🟠 Due Tomorrow';
-  if (diff <= 3) return '🟡 Due ' + fmt;
-  return fmt;
+  var changed = false;
+  bills.forEach(function(b) {
+    if (b.paid && b.recurring && b.dueISO) {
+      var due = new Date(b.dueISO); due.setHours(0,0,0,0);
+      if (due <= now) { b.paid = false; changed = true; }
+    }
+  });
+  if (changed) saveAll();
 }
 function renderBills() {
-  var list = document.getElementById("bills-list");
+  checkBillAutoReset();
+  var list = document.getElementById('bills-list');
   if (!bills.length) { list.innerHTML = '<div class="empty">No bills yet — add one below</div>'; return; }
   var sorted = bills.slice().sort(function(a,b) {
-    if (!a.dueISO && !b.dueISO) return 0;
-    if (!a.dueISO) return 1; if (!b.dueISO) return -1;
-    return new Date(a.dueISO) - new Date(b.dueISO);
+    if (a.paid && !b.paid) return 1;
+    if (!a.paid && b.paid) return -1;
+    return billDaysUntil(a) - billDaysUntil(b);
   });
   list.innerHTML = sorted.map(function(b) {
     var i = bills.indexOf(b);
     var urg = billUrgencyClass(b);
     return '<div class="bill-item ' + urg + '">' +
-      '<div style="flex:1;min-width:0;"><div class="bill-name">' + esc(b.name) + '</div><div class="bill-sub">' + billDueLabel(b) + '</div></div>' +
-      '<div class="bill-amount ' + (b.paid?'ok':'due') + '">$' + Number(b.amount||0).toFixed(0) + '</div>' +
-      '<button class="bill-paid-btn ' + (b.paid?'paid':'unpaid') + '" onclick="toggleBillPaid('+i+')">' + (b.paid?'Paid':'Due') + '</button>' +
-      '<button class="del-btn" onclick="deleteBill('+i+')">×</button>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="bill-name">' + esc(b.name) + (b.recurring ? '<span class="bill-recurring-tag">recurring</span>' : '') + '</div>' +
+        '<div class="bill-sub">' + billStatusLabel(b) + '</div>' +
+      '</div>' +
+      '<div class="bill-amount">$' + Number(b.amount||0).toFixed(0) + '</div>' +
+      '<button class="bill-status-btn" onclick="toggleBillPaid(' + i + ')">' + (b.paid ? 'Paid' : 'Mark Paid') + '</button>' +
+      '<button class="del-btn" onclick="deleteBill(' + i + ')">×</button>' +
     '</div>';
-  }).join("");
+  }).join('');
 }
-
-function toggleBillPaid(i) { bills[i].paid = !bills[i].paid; renderBills(); updateBillTotal(); saveAll(); }
-function deleteBill(i) { bills.splice(i, 1); renderBills(); updateBillTotal(); saveAll(); }
-
+function toggleBillPaid(i) {
+  var b = bills[i];
+  b.paid = !b.paid;
+  if (b.paid && b.recurring && b.dueISO) {
+    var next = new Date(b.dueISO);
+    next.setMonth(next.getMonth() + 1);
+    b.dueISO = next.toISOString();
+  }
+  renderBills(); updateBillTotal(); saveAll();
+}
+function deleteBill(i) { bills.splice(i,1); renderBills(); updateBillTotal(); saveAll(); }
 function addBill() {
-  var name = document.getElementById("bill-name-in").value.trim();
-  var amt = document.getElementById("bill-amt-in").value.trim();
-  var dueIn = document.getElementById("bill-due-in").value;
+  var name = document.getElementById('bill-name-in').value.trim();
+  var amt = document.getElementById('bill-amt-in').value.trim();
+  var dueIn = document.getElementById('bill-due-in').value;
+  var recurEl = document.getElementById('bill-recurring-in');
+  var recurring = recurEl ? recurEl.checked : false;
   if (!name) return;
   var dueISO = dueIn ? new Date(dueIn + 'T12:00:00').toISOString() : '';
-  var dateFmt = dueISO ? new Date(dueISO).toLocaleDateString("en-US",{month:"short",day:"numeric"}) : new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"});
-  bills.push({ name: name, amount: parseFloat(amt)||0, date: dateFmt, dueISO: dueISO, paid: false });
-  document.getElementById("bill-name-in").value = "";
-  document.getElementById("bill-amt-in").value = "";
-  document.getElementById("bill-due-in").value = "";
-  renderBills();
-  updateBillTotal();
-  saveAll();
+  bills.push({ name: name, amount: parseFloat(amt)||0, dueISO: dueISO, paid: false, recurring: recurring });
+  document.getElementById('bill-name-in').value = '';
+  document.getElementById('bill-amt-in').value = '';
+  document.getElementById('bill-due-in').value = '';
+  if (recurEl) recurEl.checked = false;
+  renderBills(); updateBillTotal(); saveAll();
 }
-
 function updateBillTotal() {
   var due = bills.filter(function(b) { return !b.paid; }).reduce(function(s,b) { return s + parseFloat(b.amount||0); }, 0);
-  document.getElementById("dash-bills-total").textContent = "$" + due.toFixed(0);
+  document.getElementById('dash-bills-total').textContent = '$' + due.toFixed(0);
 }
-
 // ── Subscriptions ──
 function renderSubs() {
   var list = document.getElementById("subs-list");
@@ -1210,26 +1389,38 @@ function renderGoalsAll() {
   renderGoalSection("goals-relationship", goalsRelationship, "rose", "relationship");
 }
 
+function milestonePips(pct) {
+  return '<div class="goal-milestones">' +
+    [25,50,75,100].map(function(m) {
+      var r = pct >= m;
+      return '<div class="milestone-pip' + (r ? (' reached' + (m===100?' full':'')) : '') + '">' + m + '%</div>';
+    }).join('') +
+  '</div>';
+}
 function renderGoalSection(elId, arr, cls, catKey) {
   var el = document.getElementById(elId);
   if (!arr.length) { el.innerHTML = '<div class="empty">No goals yet</div>'; return; }
   el.innerHTML = arr.map(function(g, i) {
     var pct = g.target > 0 ? Math.min(100, Math.round(g.current/g.target*100)) : 0;
     var unit = g.unit || '$';
+    var prevPct = g.prevPct || 0;
+    var justHit = [25,50,75,100].some(function(m){ return pct >= m && prevPct < m; });
+    if (pct > prevPct) g.prevPct = pct;
     function fmtVal(v) { return unit === '$' ? ('$' + Number(v).toLocaleString()) : (Number(v).toLocaleString() + ' ' + esc(unit)); }
     return '<div class="goal-item">' +
       '<div class="goal-top">' +
-        '<span class="goal-name">' + esc(g.name) + '</span>' +
+        '<span class="goal-name">' + esc(g.name) + (justHit ? ' 🎉' : '') + '</span>' +
         '<span style="display:flex;align-items:center;gap:8px;">' +
-          '<button class="mini-btn" onclick="updateGoal(\''+catKey+'\','+i+')">Update</button>' +
+          '<button class="mini-btn" onclick="updateGoal(\'' + catKey + '\',' + i + ')">Update</button>' +
           '<span class="goal-pct">' + pct + '%</span>' +
-          '<button class="del-btn" onclick="deleteGoal(\''+catKey+'\','+i+')">×</button>' +
+          '<button class="del-btn" onclick="deleteGoal(\'' + catKey + '\',' + i + ')">×</button>' +
         '</span>' +
       '</div>' +
       '<div class="goal-bar-track"><div class="goal-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
       '<div class="goal-meta"><span>' + fmtVal(g.current) + ' of ' + fmtVal(g.target) + '</span></div>' +
+      milestonePips(pct) +
     '</div>';
-  }).join("");
+  }).join('');
 }
 
 function renderDashGoals() {
@@ -1423,57 +1614,69 @@ function showToast(title, body, type) {
   t.onclick = function() { if (t.parentNode) t.parentNode.removeChild(t); };
 }
 
+function advanceRecurringPlans() {
+  var now = new Date(); now.setHours(0,0,0,0);
+  var changed = false;
+  plans.forEach(function(p) {
+    if (!p.recurring || !p.dateISO) return;
+    var due = new Date(p.dateISO); due.setHours(0,0,0,0);
+    if (due < now) {
+      due.setFullYear(due.getFullYear() + 1);
+      p.dateISO = due.toISOString();
+      p.day = due.getDate().toString();
+      p.mon = due.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
+      changed = true;
+    }
+  });
+  if (changed) saveAll();
+}
 function renderPlans() {
-  var list = document.getElementById("plans-list");
+  advanceRecurringPlans();
+  var list = document.getElementById('plans-list');
   if (!plans.length) { list.innerHTML = '<div class="empty">No events yet</div>'; return; }
   var sorted = plans.slice().sort(function(a,b) { return new Date(a.dateISO||0) - new Date(b.dateISO||0); });
   list.innerHTML = sorted.map(function(p) {
     var oi = plans.indexOf(p);
     return '<div class="event-item">' +
       '<div class="event-date-block"><div class="event-day">' + esc(p.day) + '</div><div class="event-mon">' + esc(p.mon) + '</div></div>' +
-      '<div style="flex:1;min-width:0;"><div class="event-title">' + esc(p.title) + '</div><div class="event-desc">' + esc(p.note||'') + '</div></div>' +
-      '<button class="del-btn" onclick="plans.splice('+oi+',1);renderPlans();updateNextEvent();saveAll()">×</button>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="event-title">' + esc(p.title) + '</div>' +
+        (p.note ? '<div class="event-desc">' + esc(p.note) + '</div>' : '') +
+        (p.recurring ? '<span class="event-recurring">↻ yearly</span>' : '') +
+      '</div>' +
+      '<button class="del-btn" onclick="plans.splice(' + oi + ',1);renderPlans();updateNextEvent();saveAll()">×</button>' +
     '</div>';
-  }).join("");
+  }).join('');
 }
-
 function addPlan() {
-  var dateEl = document.getElementById("plan-date");
-  var title = document.getElementById("plan-title").value.trim();
-  var note = document.getElementById("plan-note").value.trim();
+  var dateEl = document.getElementById('plan-date');
+  var title = document.getElementById('plan-title').value.trim();
+  var note = document.getElementById('plan-note').value.trim();
+  var recurEl = document.getElementById('plan-recurring');
+  var recurring = recurEl ? recurEl.checked : false;
   if (!title) return;
-
   var dateISO = '', day = '—', mon = '';
   if (dateEl.value) {
     var d = new Date(dateEl.value + 'T12:00:00');
     dateISO = d.toISOString();
     day = d.getDate().toString();
-    mon = d.toLocaleDateString("en-US",{month:"short"}).toUpperCase();
+    mon = d.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
   }
-
-  plans.push({ title: title, note: note, dateISO: dateISO, day: day, mon: mon });
-  dateEl.value = "";
-  document.getElementById("plan-title").value = "";
-  document.getElementById("plan-note").value = "";
-  renderPlans();
-  updateNextEvent();
-  saveAll();
+  plans.push({ title: title, note: note, dateISO: dateISO, day: day, mon: mon, recurring: recurring });
+  dateEl.value = ''; document.getElementById('plan-title').value = ''; document.getElementById('plan-note').value = '';
+  if (recurEl) recurEl.checked = false;
+  renderPlans(); updateNextEvent(); saveAll();
 }
-
 function updateNextEvent() {
-  var now = new Date();
-  now.setHours(0,0,0,0);
+  var now = new Date(); now.setHours(0,0,0,0);
   var upcoming = plans.filter(function(p) { return p.dateISO && new Date(p.dateISO) >= now; })
     .sort(function(a,b) { return new Date(a.dateISO) - new Date(b.dateISO); });
-  var el = document.getElementById("dash-next-event");
+  var el = document.getElementById('dash-next-event');
   if (upcoming.length) {
     var diff = Math.ceil((new Date(upcoming[0].dateISO) - now) / (1000*60*60*24));
     el.textContent = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff + 'd';
-  } else {
-    el.textContent = '—';
-  }
+  } else { el.textContent = '—'; }
 }
-
 // ── Home: Chores & Projects ──
 function homeTab(tab, btn) {
   document.querySelectorAll("#page-home .tab-pill").forEach(function(p) { p.classList.remove("active"); });
@@ -1483,74 +1686,84 @@ function homeTab(tab, btn) {
   });
 }
 
-function advanceChoreDate(c) {
-  var base = c.nextDueISO ? new Date(c.nextDueISO) : new Date();
+function advanceChoreDate(ch) {
+  var base = ch.nextDueISO ? new Date(ch.nextDueISO) : new Date();
   base.setHours(12,0,0,0);
-  var freq = c.freq;
-  if (freq === 'Daily') base.setDate(base.getDate() + 1);
-  else if (freq === 'Weekly') base.setDate(base.getDate() + 7);
-  else if (freq === 'Biweekly') base.setDate(base.getDate() + 14);
-  else if (freq === 'Monthly') base.setMonth(base.getMonth() + 1);
+  if (ch.freq === 'Daily') base.setDate(base.getDate() + 1);
+  else if (ch.freq === 'Weekly') base.setDate(base.getDate() + 7);
+  else if (ch.freq === 'Biweekly') base.setDate(base.getDate() + 14);
+  else if (ch.freq === 'Monthly') base.setMonth(base.getMonth() + 1);
   return base.toISOString();
 }
-function choreDueLabel(c) {
-  if (!c.nextDueISO) return c.freq;
+function choreDueLabel(ch) {
+  if (!ch.nextDueISO) return ch.freq;
   var now = new Date(); now.setHours(0,0,0,0);
-  var due = new Date(c.nextDueISO); due.setHours(0,0,0,0);
+  var due = new Date(ch.nextDueISO); due.setHours(0,0,0,0);
   var diff = Math.ceil((due - now) / 86400000);
-  var fmt = due.toLocaleDateString("en-US",{month:"short",day:"numeric"});
-  if (diff < 0) return { label: '⚠ Overdue · ' + fmt, cls: 'urgent' };
-  if (diff === 0) return { label: '🔴 Today', cls: 'urgent' };
-  if (diff === 1) return { label: '🟠 Tomorrow', cls: 'soon' };
-  if (diff <= 3) return { label: '🟡 ' + fmt, cls: 'soon' };
-  return { label: fmt, cls: '' };
+  var fmt = due.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  if (diff < 0) return {label:'⚠ Overdue · ' + fmt, cls:'urgent'};
+  if (diff === 0) return {label:'Due today', cls:'urgent'};
+  if (diff === 1) return {label:'Due tomorrow', cls:'soon'};
+  if (diff <= 3) return {label:fmt, cls:'soon'};
+  return {label:fmt, cls:''};
+}
+function streakValid(ch) {
+  if (!ch.lastDoneISO || !ch.streak) return false;
+  var last = new Date(ch.lastDoneISO); last.setHours(0,0,0,0);
+  var now = new Date(); now.setHours(0,0,0,0);
+  var win = {Daily:2, Weekly:9, Biweekly:16, Monthly:35}[ch.freq] || 9;
+  return Math.ceil((now - last) / 86400000) <= win;
 }
 function renderChores() {
-  var list = document.getElementById("chores-list");
+  var list = document.getElementById('chores-list');
   if (!chores.length) { list.innerHTML = '<div class="empty">No chores yet</div>'; return; }
-  var icons = {Daily:"🍽️",Weekly:"🧹",Biweekly:"🧼",Monthly:"🗑️"};
-  list.innerHTML = chores.map(function(c, i) {
-    var dl = choreDueLabel(c);
+  var ownerCls = {adam:'own-adam', brit:'own-brit', both:'own-both'};
+  var ownerLbl = {adam:'Adam', brit:'Brittany', both:'Both'};
+  list.innerHTML = chores.map(function(ch, i) {
+    var dl = choreDueLabel(ch);
     var label = typeof dl === 'string' ? dl : dl.label;
-    var cls = typeof dl === 'object' ? dl.cls : '';
-    return '<div class="chore-item" onclick="completeChore('+i+')">' +
-      '<span class="chore-icon">' + (icons[c.freq]||"📋") + '</span>' +
-      '<span class="chore-text">' + esc(c.text) + '</span>' +
-      '<span class="chore-due ' + cls + '">' + label + '</span>' +
-      '<button class="del-btn" onclick="event.stopPropagation();chores.splice('+i+',1);renderChores();saveAll()">×</button>' +
+    var dueCls = typeof dl === 'object' ? dl.cls : '';
+    var owner = ch.owner || 'both';
+    var streak = (ch.streak && streakValid(ch) && ch.streak >= 2) ? '🔥 ' + ch.streak : '';
+    return '<div class="chore-item" id="chore-row-' + i + '" onclick="completeChore(' + i + ')">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="chore-text">' + esc(ch.text) + '</div>' +
+        '<span class="chore-due ' + dueCls + '">' + label + '</span>' +
+      '</div>' +
+      '<span class="chore-owner ' + ownerCls[owner] + '">' + ownerLbl[owner] + '</span>' +
+      '<span class="chore-streak">' + streak + '</span>' +
+      '<button class="del-btn" onclick="event.stopPropagation();chores.splice(' + i + ',1);renderChores();saveAll()">×</button>' +
     '</div>';
-  }).join("");
+  }).join('');
 }
 function completeChore(i) {
-  var c = chores[i];
-  var row = document.querySelectorAll(".chore-item")[i];
+  var row = document.getElementById('chore-row-' + i);
   if (row) {
-    row.style.transition = "opacity 0.3s, transform 0.3s";
-    row.style.opacity = "0";
-    row.style.transform = "translateX(20px)";
+    row.style.transition = 'opacity 0.3s, transform 0.3s';
+    row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
   }
   setTimeout(function() {
-    chores[i].nextDueISO = advanceChoreDate(chores[i]);
-    renderChores();
-    saveAll();
-    checkReminders(true);
+    var ch = chores[i]; if (!ch) return;
+    var prev = (ch.streak && streakValid(ch)) ? ch.streak : 0;
+    ch.streak = prev + 1;
+    ch.lastDoneISO = new Date().toISOString();
+    ch.nextDueISO = advanceChoreDate(ch);
+    renderChores(); renderDashToday(); renderDashRecap(); saveAll();
   }, 320);
 }
-
 function addChore() {
-  var inp = document.getElementById("chore-in");
-  var freq = document.getElementById("chore-freq").value;
-  var dateIn = document.getElementById("chore-date-in").value;
+  var inp = document.getElementById('chore-in');
+  var freq = document.getElementById('chore-freq').value;
+  var dateIn = document.getElementById('chore-date-in').value;
+  var ownerEl = document.getElementById('chore-owner-in');
+  var owner = ownerEl ? ownerEl.value : 'both';
   var v = inp.value.trim();
   if (!v) return;
   var nextDueISO = dateIn ? new Date(dateIn + 'T12:00:00').toISOString() : '';
-  chores.push({ text: v, freq: freq, nextDueISO: nextDueISO });
-  inp.value = "";
-  document.getElementById("chore-date-in").value = "";
-  renderChores();
-  saveAll();
+  chores.push({ text: v, freq: freq, owner: owner, nextDueISO: nextDueISO, streak: 0, lastDoneISO: '' });
+  inp.value = ''; document.getElementById('chore-date-in').value = '';
+  renderChores(); saveAll();
 }
-
 function renderProjects() {
   var list = document.getElementById("projects-list");
   if (!projects.length) { list.innerHTML = '<div class="empty">No projects yet</div>'; return; }
