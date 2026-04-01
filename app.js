@@ -44,6 +44,7 @@ var OG = (function() {
   var tasks=[],notes=[],groceryItems=[],discussItems=[],bills=[],subs=[];
   var goalsFinancial=[],goalsLife=[],goalsRelationship=[];
   var chores=[],projects=[],plans=[];
+  var budget={adam:{paycheckAmount:0,nextPaycheckISO:''},brit:{paycheckAmount:0,nextPaycheckISO:''}};
   var currentTaskFilter='all', currentOwner='adam';
   var expandedNotes={}, expandedGoals={};
   var activeUser='', activeUserName='';
@@ -162,7 +163,7 @@ var OG = (function() {
   // ══════════════════════════════════
   function getSyncUrl(){var meta=document.querySelector('meta[name="ourgrowth-sync-url"]');if(meta&&meta.content)return meta.content.trim();return '';}
   function setSyncStatus(msg){var el=$('sync-indicator');if(el)el.textContent=msg;}
-  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,discussItems:discussItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,chores:chores,projects:projects,plans:plans};}
+  function buildState(){return{tasks:tasks,notes:notes,groceryItems:groceryItems,discussItems:discussItems,bills:bills,subs:subs,goalsFinancial:goalsFinancial,goalsLife:goalsLife,goalsRelationship:goalsRelationship,chores:chores,projects:projects,plans:plans,budget:budget};}
   function countState(d){if(!d||typeof d!=='object')return 0;return[d.tasks,d.notes,d.groceryItems,d.discussItems,d.bills,d.subs,d.goalsFinancial,d.goalsLife,d.goalsRelationship,d.chores,d.projects,d.plans].reduce(function(t,a){return t+(Array.isArray(a)?a.length:0);},0);}
   function hasMeaningfulState(d){return countState(d)>0;}
   function applyState(d){
@@ -172,6 +173,7 @@ var OG = (function() {
     goalsFinancial=ensureIds(Array.isArray(d.goalsFinancial)?d.goalsFinancial:[],'gfin');goalsLife=ensureIds(Array.isArray(d.goalsLife)?d.goalsLife:[],'glif');
     goalsRelationship=ensureIds(Array.isArray(d.goalsRelationship)?d.goalsRelationship:[],'grel');chores=ensureIds(Array.isArray(d.chores)?d.chores:[],'chor');
     projects=ensureIds(Array.isArray(d.projects)?d.projects:[],'proj');plans=ensureIds(Array.isArray(d.plans)?d.plans:[],'plan');
+    if(d.budget&&typeof d.budget==='object'){budget=d.budget;if(!budget.adam)budget.adam={paycheckAmount:0,nextPaycheckISO:''};if(!budget.brit)budget.brit={paycheckAmount:0,nextPaycheckISO:''};}
   }
   function persistPayload(payload){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(payload));}catch(e){}}
   function saveAll(skipSync){localStateUpdatedAt=Date.now();var payload={updatedAt:localStateUpdatedAt,deviceId:DEVICE_ID,data:buildState()};persistPayload(payload);if(!skipSync)queueSyncPush();}
@@ -280,6 +282,7 @@ var OG = (function() {
     document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
     document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
     $('page-'+id).classList.add('active');var b=$('nav-'+id);if(b)b.classList.add('active');window.scrollTo(0,0);
+    if(id==='money'){var firstPill=document.querySelector('#page-money .tab-pill');if(firstPill&&!$('money-adam').innerHTML.trim()){firstPill.classList.add('active');renderBudgetTab('adam');$('money-adam').style.display='';}}
   }
   function setOwner(owner,btn){currentOwner=owner;document.querySelectorAll('.owner-pill').forEach(function(p){p.className='owner-pill';});btn.classList.add('sel-'+owner);}
 
@@ -382,7 +385,7 @@ var OG = (function() {
   function renderSubs(){var list=$('subs-list');if(!subs.length){list.innerHTML='<div class="empty">No subscriptions yet</div>';return;}list.innerHTML=subs.map(function(s){return '<div class="bill-item"><div style="flex:1;min-width:0;"><div class="bill-name">'+esc(s.name)+'</div><div class="bill-sub">'+esc(s.owner||'')+'</div></div><div class="bill-amount">$'+Number(s.amount||0).toFixed(0)+'</div><button class="del-btn" onclick="OG.deleteSub(\''+s.id+'\')">×</button></div>';}).join('');}
   function deleteSub(id){var removed=removeById(subs,id);if(removed)showUndo(removed.name,'subs',removed);renderSubs();saveAll();}
   function addSub(){var name=$('sub-name-in').value.trim(),owner=$('sub-owner-in').value.trim(),amt=$('sub-amt-in').value.trim();if(!name)return;subs.push({id:uid('sub'),name:name,owner:owner,amount:parseFloat(amt)||0});$('sub-name-in').value='';$('sub-owner-in').value='';$('sub-amt-in').value='';renderSubs();saveAll();}
-  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['bills','mgoals','subs'].forEach(function(t){$('money-'+t).style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();}
+  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['adam','brit','house','bills','mgoals','subs'].forEach(function(t){$('money-'+t).style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();if(tab==='adam')renderBudgetTab('adam');if(tab==='brit')renderBudgetTab('brit');if(tab==='house')renderBudgetHouse();}
   function renderSavingsGoals(){var list=$('savings-list');if(!goalsFinancial.length){list.innerHTML='<div class="empty">Add goals in the Goals tab</div>';return;}list.innerHTML=goalsFinancial.map(function(g){var pct=g.target>0?Math.min(100,Math.round(g.current/g.target*100)):0;var unit=g.unit||'$';var fmtC=unit==='$'?('$'+Number(g.current).toLocaleString()):(Number(g.current).toLocaleString()+' '+esc(unit));var fmtT=unit==='$'?('$'+Number(g.target).toLocaleString()):(Number(g.target).toLocaleString()+' '+esc(unit));return '<div class="goal-item"><div class="goal-top"><span class="goal-name">'+esc(g.name)+'</span><span class="goal-pct">'+pct+'%</span></div><div class="goal-bar-track"><div class="goal-bar-fill" style="width:'+pct+'%"></div></div><div class="goal-meta"><span>'+fmtC+' of '+fmtT+'</span></div></div>';}).join('');}
 
   // ══════════════════════════════════
@@ -460,10 +463,318 @@ var OG = (function() {
   function deleteProject(id){var removed=removeById(projects,id);if(removed)showUndo(removed.text,'projects',removed);renderProjects();saveAll();}
   function addProject(){var inp=$('project-in'),v=inp.value.trim();if(!v)return;projects.push({id:uid('proj'),text:v,done:false});inp.value='';renderProjects();saveAll();}
 
+
+  // ══════════════════════════════════
+  // BUDGET ENGINE
+  // ══════════════════════════════════
+
+  function budgetMonthlyIncome(person) {
+    var b = budget[person];
+    if (!b || !b.paycheckAmount) return 0;
+    return b.paycheckAmount * 26 / 12;
+  }
+
+  function autoAdvancePaycheck(person) {
+    var b = budget[person];
+    if (!b || !b.nextPaycheckISO) return;
+    var now = new Date(); now.setHours(0,0,0,0);
+    var next = new Date(b.nextPaycheckISO); next.setHours(0,0,0,0);
+    var changed = false;
+    while (next < now) { next.setDate(next.getDate() + 14); changed = true; }
+    if (changed) { b.nextPaycheckISO = next.toISOString(); saveAll(); }
+  }
+
+  function daysUntilPaycheck(person) {
+    var b = budget[person];
+    if (!b || !b.nextPaycheckISO) return null;
+    autoAdvancePaycheck(person);
+    var now = new Date(); now.setHours(0,0,0,0);
+    var next = new Date(b.nextPaycheckISO); next.setHours(0,0,0,0);
+    return Math.ceil((next - now) / 86400000);
+  }
+
+  function billsBeforePaycheck(person) {
+    var b = budget[person];
+    if (!b || !b.nextPaycheckISO) return [];
+    autoAdvancePaycheck(person);
+    var next = new Date(b.nextPaycheckISO); next.setHours(23,59,59,999);
+    var now = new Date(); now.setHours(0,0,0,0);
+    return bills.filter(function(bill) {
+      if (bill.paid || !bill.dueISO) return false;
+      var due = new Date(bill.dueISO); due.setHours(0,0,0,0);
+      return due >= now && due <= next;
+    });
+  }
+
+  function totalSubsMonthly() {
+    return subs.reduce(function(s,sub){ return s + parseFloat(sub.amount||0); }, 0);
+  }
+
+  function totalBillsMonthly() {
+    return bills.filter(function(b){ return !b.paid; }).reduce(function(s,b){ return s + parseFloat(b.amount||0); }, 0);
+  }
+
+  function calcHealthScore(person) {
+    var monthly = budgetMonthlyIncome(person);
+    if (!monthly) return null;
+    var committed = totalBillsMonthly() + totalSubsMonthly();
+    var surplus = monthly - committed;
+    var days = daysUntilPaycheck(person);
+    var dailySpend = committed / 30;
+    var bufferDays = dailySpend > 0 ? surplus / dailySpend : 99;
+
+    // 1. Surplus % (0-25)
+    var commitRatio = committed / monthly;
+    var s1 = commitRatio < 0.5 ? 25 : commitRatio < 0.7 ? 18 : commitRatio < 0.85 ? 10 : 0;
+
+    // 2. Bill timing (0-25) — any bills before payday that might pinch
+    var beforePay = billsBeforePaycheck(person);
+    var beforeTotal = beforePay.reduce(function(t,b){ return t+parseFloat(b.amount||0); }, 0);
+    var paycheckAmt = budget[person].paycheckAmount || 0;
+    var s2 = beforeTotal === 0 ? 25 : beforeTotal < paycheckAmt * 0.3 ? 18 : beforeTotal < paycheckAmt * 0.6 ? 10 : 0;
+
+    // 3. Savings rate — we approximate: if surplus > 20% of income
+    var savingsRate = surplus / monthly;
+    var s3 = savingsRate >= 0.2 ? 25 : savingsRate >= 0.1 ? 18 : savingsRate > 0 ? 10 : 0;
+
+    // 4. Buffer days (0-25)
+    var s4 = bufferDays >= 30 ? 25 : bufferDays >= 14 ? 18 : bufferDays >= 7 ? 10 : 0;
+
+    var total = s1 + s2 + s3 + s4;
+    var grade = total >= 90 ? 'A' : total >= 75 ? 'B' : total >= 55 ? 'C' : 'D';
+
+    // Biggest weakness
+    var weaknesses = [{score:s1,msg:'High committed spend ratio'},{score:s2,msg:'Bills due before next paycheck'},{score:s3,msg:'Low savings rate'},{score:s4,msg:'Thin financial buffer'}];
+    weaknesses.sort(function(a,b){return a.score-b.score;});
+    var insight = weaknesses[0].score < 18 ? weaknesses[0].msg : 'Looking solid';
+
+    return {total:total,grade:grade,insight:insight,surplus:surplus,commitRatio:commitRatio,savingsRate:savingsRate,bufferDays:bufferDays};
+  }
+
+  function calcHealthScoreHouse() {
+    var adamMonthly = budgetMonthlyIncome('adam');
+    var britMonthly = budgetMonthlyIncome('brit');
+    var monthly = adamMonthly + britMonthly;
+    if (!monthly) return null;
+    var committed = totalBillsMonthly() + totalSubsMonthly();
+    var surplus = monthly - committed;
+    var commitRatio = committed / monthly;
+    var savingsRate = surplus / monthly;
+    var dailySpend = committed / 30;
+    var bufferDays = dailySpend > 0 ? surplus / dailySpend : 99;
+
+    var s1 = commitRatio < 0.5 ? 25 : commitRatio < 0.7 ? 18 : commitRatio < 0.85 ? 10 : 0;
+    var s3 = savingsRate >= 0.2 ? 25 : savingsRate >= 0.1 ? 18 : savingsRate > 0 ? 10 : 0;
+    var s4 = bufferDays >= 30 ? 25 : bufferDays >= 14 ? 18 : bufferDays >= 7 ? 10 : 0;
+    var total = s1 + 25 + s3 + s4; // house always gets full bill-timing score since both paychecks stagger
+    var grade = total >= 90 ? 'A' : total >= 75 ? 'B' : total >= 55 ? 'C' : 'D';
+    var weaknesses = [{score:s1,msg:'High committed spend ratio'},{score:s3,msg:'Low household savings rate'},{score:s4,msg:'Thin financial buffer'}];
+    weaknesses.sort(function(a,b){return a.score-b.score;});
+    var insight = weaknesses[0].score < 18 ? weaknesses[0].msg : 'Household finances look healthy';
+    return {total:total,grade:grade,insight:insight,surplus:surplus,commitRatio:commitRatio,savingsRate:savingsRate,monthly:monthly,committed:committed,adamMonthly:adamMonthly,britMonthly:britMonthly};
+  }
+
+  function gradeColor(g) {
+    return g==='A'?'var(--green)':g==='B'?'var(--accent)':g==='C'?'#e08a2a':'var(--rose)';
+  }
+
+  function saveBudgetInput(person, field, val) {
+    if (!budget[person]) budget[person] = {paycheckAmount:0, nextPaycheckISO:''};
+    if (field === 'amount') budget[person].paycheckAmount = parseFloat(val) || 0;
+    if (field === 'date') budget[person].nextPaycheckISO = val ? new Date(val+'T12:00:00').toISOString() : '';
+    autoAdvancePaycheck(person);
+    renderBudgetTab(person);
+    renderDashPaycheck();
+    saveAll();
+  }
+
+  function renderBudgetTab(person) {
+    var el = $('money-'+person); if (!el) return;
+    var b = budget[person] || {};
+    var name = person === 'adam' ? 'Adam' : 'Brittany';
+    var monthly = budgetMonthlyIncome(person);
+    var committed = totalBillsMonthly() + totalSubsMonthly();
+    var surplus = monthly - committed;
+    var days = daysUntilPaycheck(person);
+    var daysLabel = days === null ? 'Set date below' : days === 0 ? 'Today! 🎉' : days === 1 ? 'Tomorrow' : days + ' days';
+    var dailyDiscretionary = (days && days > 0 && surplus > 0) ? (surplus / days) : 0;
+    var health = monthly ? calcHealthScore(person) : null;
+    var beforePay = billsBeforePaycheck(person);
+    var subsTotal = totalSubsMonthly();
+    var subsRatio = monthly > 0 ? (subsTotal / monthly * 100).toFixed(1) : 0;
+    var subFlag = monthly > 0 && subsTotal / monthly > 0.1;
+    var dateVal = b.nextPaycheckISO ? new Date(b.nextPaycheckISO).toISOString().split('T')[0] : '';
+
+    // Savings recommendations
+    var savRecs = '';
+    if (monthly > 0 && surplus > 0) {
+      var s10 = (surplus * 0.10).toFixed(0);
+      var s20 = (surplus * 0.20).toFixed(0);
+      savRecs = '<div class="budget-savings-box">' +
+        '<div class="budget-savings-title">💡 Savings Suggestions</div>' +
+        '<div class="budget-sav-row"><span>Conservative (10%)</span><span class="budget-sav-amt">$'+s10+'/mo</span></div>' +
+        '<div class="budget-sav-row"><span>Recommended (20%)</span><span class="budget-sav-amt">$'+s20+'/mo</span></div>' +
+        (dailyDiscretionary > 0 ? '<div class="budget-sav-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);"><span>Daily budget until payday</span><span class="budget-sav-amt">$'+dailyDiscretionary.toFixed(0)+'/day</span></div>' : '') +
+      '</div>';
+    }
+
+    // Bills before payday section
+    var billsPay = '';
+    if (beforePay.length) {
+      var billsBeforeTotal = beforePay.reduce(function(t,x){return t+parseFloat(x.amount||0);},0);
+      var paycheckAmt = b.paycheckAmount || 0;
+      billsPay = '<div class="budget-section-label">⚠ Due Before Next Paycheck</div>' +
+        '<div class="budget-timing-list">' +
+        beforePay.map(function(bill) {
+          var diff = billDaysUntil(bill);
+          var cls = diff <= 1 ? 'timing-red' : diff <= 4 ? 'timing-amber' : 'timing-green';
+          return '<div class="budget-timing-item '+cls+'"><span>'+esc(bill.name)+'</span><span>$'+Number(bill.amount||0).toFixed(0)+'</span></div>';
+        }).join('') +
+        '<div class="budget-timing-item" style="font-weight:500;margin-top:4px;border-top:1px solid var(--border);padding-top:6px;"><span>Total before payday</span><span>$'+billsBeforeTotal.toFixed(0)+'</span></div>' +
+        '</div>';
+    }
+
+    // Subscription audit
+    var subAudit = '<div class="budget-section-label">Subscription Audit</div>' +
+      '<div class="budget-sub-audit' + (subFlag ? ' flag' : '') + '">' +
+        '<div class="bsa-num">$'+subsTotal.toFixed(0)+'<span>/mo</span></div>' +
+        '<div class="bsa-pct">'+subsRatio+'% of monthly income</div>' +
+        (subFlag ? '<div class="bsa-flag">⚠ Over 10% — worth a review</div>' : '<div class="bsa-flag ok">✓ Within range</div>') +
+      '</div>';
+
+    el.innerHTML =
+      // Paycheck setup
+      '<div class="budget-setup-card">' +
+        '<div class="budget-section-label">Paycheck Setup</div>' +
+        '<div class="add-row" style="margin:0;flex-wrap:wrap;gap:8px;">' +
+          '<input class="add-input" type="number" inputmode="decimal" placeholder="Paycheck amount $" value="'+(b.paycheckAmount||'')+'" style="flex:1;min-width:130px;" oninput="OG.saveBudgetInput(\'' + person + '\',\'amount\',this.value)">' +
+          '<input class="add-input" type="date" value="'+dateVal+'" style="max-width:155px;" title="Next paycheck date" onchange="OG.saveBudgetInput(\'' + person + '\',\'date\',this.value)">' +
+        '</div>' +
+        '<div style="font-size:0.63rem;color:var(--text-dim);margin-top:6px;">Bi-weekly · Monthly equivalent: '+(monthly?'<strong style=\"color:var(--text);\">&dollar;'+monthly.toFixed(0)+'</strong>':'<em>enter amount above</em>')+'</div>' +
+      '</div>' +
+
+      // Paycheck countdown
+      (days !== null ? '<div class="budget-countdown"><div class="bcd-days">'+daysLabel+'</div><div class="bcd-label">until next paycheck'+( b.paycheckAmount ? ' · $'+Number(b.paycheckAmount).toLocaleString() : '')+'</div></div>' : '') +
+
+      // Health score
+      (health ? '<div class="budget-health"><div class="bh-grade" style="color:'+gradeColor(health.grade)+'">'+health.grade+'</div><div class="bh-details"><div class="bh-label">Month Health Score · '+health.total+'/100</div><div class="bh-insight">'+esc(health.insight)+'</div></div></div>' : '') +
+
+      // Summary bar
+      (monthly ? '<div class="budget-summary">' +
+        '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+Math.min(100,(committed/monthly*100)).toFixed(1)+'%;background:'+(committed>monthly?'var(--rose)':'var(--accent)')+'"></div></div>' +
+        '<div class="budget-line-row"><span>Income</span><span>$'+monthly.toFixed(0)+'/mo</span></div>' +
+        '<div class="budget-line-row"><span>Bills + Subs</span><span style="color:var(--rose);">−$'+committed.toFixed(0)+'</span></div>' +
+        '<div class="budget-line-row" style="font-weight:600;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span>Remaining</span><span style="color:'+(surplus>=0?'var(--green)':'var(--rose)')+';">'+(surplus>=0?'+':'')+' $'+Math.abs(surplus).toFixed(0)+'</span></div>' +
+      '</div>' : '') +
+
+      billsPay +
+      savRecs +
+      subAudit;
+  }
+
+  function renderBudgetHouse() {
+    var el = $('money-house'); if (!el) return;
+    var h = calcHealthScoreHouse();
+    var adamMonthly = budgetMonthlyIncome('adam');
+    var britMonthly = budgetMonthlyIncome('brit');
+    var combined = adamMonthly + britMonthly;
+    var committed = totalBillsMonthly() + totalSubsMonthly();
+    var surplus = combined - committed;
+    var subsTotal = totalSubsMonthly();
+
+    // Income ratio split suggestion
+    var adamRatio = combined > 0 ? adamMonthly / combined : 0.5;
+    var britRatio = 1 - adamRatio;
+    var sharedBillsTotal = bills.filter(function(b){return !b.paid;}).reduce(function(t,b){return t+parseFloat(b.amount||0);},0);
+
+    // 30-day cash flow timeline
+    var now = new Date(); now.setHours(0,0,0,0);
+    var timelineEvents = [];
+    ['adam','brit'].forEach(function(p) {
+      autoAdvancePaycheck(p);
+      var b = budget[p];
+      if (!b || !b.nextPaycheckISO || !b.paycheckAmount) return;
+      var next = new Date(b.nextPaycheckISO); next.setHours(0,0,0,0);
+      for (var i=0; i<2; i++) {
+        var d = new Date(next); d.setDate(d.getDate() + i*14);
+        if (Math.ceil((d-now)/86400000) <= 30) {
+          timelineEvents.push({date:d, type:'paycheck', label:(p==='adam'?'Adam':'Brittany')+' Paycheck', amount:b.paycheckAmount, person:p});
+        }
+      }
+    });
+    bills.filter(function(b){return !b.paid&&b.dueISO;}).forEach(function(b) {
+      var due = new Date(b.dueISO); due.setHours(0,0,0,0);
+      var diff = Math.ceil((due-now)/86400000);
+      if (diff >= 0 && diff <= 30) timelineEvents.push({date:due,type:'bill',label:b.name,amount:b.amount});
+    });
+    timelineEvents.sort(function(a,b){return a.date-b.date;});
+
+    var timelineHtml = timelineEvents.length ?
+      timelineEvents.map(function(ev) {
+        var diff = Math.ceil((ev.date-now)/86400000);
+        var dateStr = diff===0?'Today':diff===1?'Tomorrow':ev.date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        var isPay = ev.type==='paycheck';
+        return '<div class="timeline-item '+(isPay?'timeline-pay':'timeline-bill')+'">' +
+          '<div class="tl-date">'+dateStr+'</div>' +
+          '<div class="tl-label">'+esc(ev.label)+'</div>' +
+          '<div class="tl-amt '+(isPay?'tl-green':'tl-red')+'">'+(isPay?'+':'-')+'$'+Number(ev.amount||0).toFixed(0)+'</div>' +
+        '</div>';
+      }).join('') :
+      '<div class="empty">Add paycheck dates and bills to see the timeline</div>';
+
+    el.innerHTML =
+      // Health score
+      (h ? '<div class="budget-health"><div class="bh-grade" style="color:'+gradeColor(h.grade)+'">'+h.grade+'</div><div class="bh-details"><div class="bh-label">Household Health · '+h.total+'/100</div><div class="bh-insight">'+esc(h.insight)+'</div></div></div>' : '') +
+
+      // Combined summary
+      '<div class="budget-summary">' +
+        (combined > 0 ?
+          '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+Math.min(100,(committed/(combined||1)*100)).toFixed(1)+'%;background:'+(committed>combined?'var(--rose)':'var(--accent)')+'"></div></div>' : '') +
+        '<div class="budget-line-row"><span>Adam Income</span><span>'+(adamMonthly?'$'+adamMonthly.toFixed(0)+'/mo':'<em style=\"color:var(--text-dim)\">not set</em>')+'</span></div>' +
+        '<div class="budget-line-row"><span>Brittany Income</span><span>'+(britMonthly?'$'+britMonthly.toFixed(0)+'/mo':'<em style=\"color:var(--text-dim)\">not set</em>')+'</span></div>' +
+        '<div class="budget-line-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-weight:600;"><span>Combined</span><span>$'+(combined||0).toFixed(0)+'/mo</span></div>' +
+        '<div class="budget-line-row"><span>All Bills + Subs</span><span style="color:var(--rose);">−$'+committed.toFixed(0)+'</span></div>' +
+        '<div class="budget-line-row" style="font-weight:600;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span>Net Surplus</span><span style="color:'+(surplus>=0?'var(--green)':'var(--rose)')+';">'+(surplus>=0?'+':'')+' $'+Math.abs(surplus).toFixed(0)+'/mo</span></div>' +
+      '</div>' +
+
+      // Split suggester
+      (combined > 0 && sharedBillsTotal > 0 ?
+        '<div class="budget-section-label">Suggested Bill Split <span style=\"font-weight:400;text-transform:none;font-size:0.67rem;\">(by income ratio)</span></div>' +
+        '<div class="budget-split-box">' +
+          '<div class="split-row"><span>Adam ('+Math.round(adamRatio*100)+'%)</span><span class="split-amt">$'+(sharedBillsTotal*adamRatio).toFixed(0)+'/mo</span></div>' +
+          '<div class="split-row"><span>Brittany ('+Math.round(britRatio*100)+'%)</span><span class="split-amt">$'+(sharedBillsTotal*britRatio).toFixed(0)+'/mo</span></div>' +
+        '</div>' : '') +
+
+      // Subscription audit
+      '<div class="budget-section-label">Subscription Audit</div>' +
+      '<div class="budget-sub-audit'+(combined>0&&subsTotal/combined>0.1?' flag':'')+'">'+
+        '<div class="bsa-num">$'+subsTotal.toFixed(0)+'<span>/mo</span></div>'+
+        '<div class="bsa-pct">'+(combined>0?(subsTotal/combined*100).toFixed(1):'—')+'% of household income</div>'+
+        (combined>0&&subsTotal/combined>0.1?'<div class="bsa-flag">⚠ Over 10% — worth a review</div>':'<div class="bsa-flag ok">✓ Within range</div>')+
+      '</div>' +
+
+      // Cash flow timeline
+      '<div class="budget-section-label">30-Day Cash Flow</div>' +
+      '<div class="budget-timeline">'+timelineHtml+'</div>';
+  }
+
+  function renderDashPaycheck() {
+    var el = $('dash-paycheck-widget'); if (!el) return;
+    autoAdvancePaycheck('adam'); autoAdvancePaycheck('brit');
+    var adamDays = daysUntilPaycheck('adam');
+    var britDays = daysUntilPaycheck('brit');
+    if (adamDays === null && britDays === null) { el.style.display='none'; return; }
+    el.style.display='';
+    var parts = [];
+    if (adamDays !== null) parts.push('Adam: '+(adamDays===0?'Today 🎉':adamDays+'d'));
+    if (britDays !== null) parts.push('Brittany: '+(britDays===0?'Today 🎉':britDays+'d'));
+    el.innerHTML = '💸 Next paycheck — '+parts.join(' · ');
+  }
+
   // ══════════════════════════════════
   // RENDER ALL + INIT
   // ══════════════════════════════════
-  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderDiscuss();renderBills();updateBillTotal();renderSubs();renderGoalsAll();renderDashGoals();renderChores();renderProjects();renderPlans();updateNextEvent();}
+  function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderDiscuss();renderBills();updateBillTotal();renderSubs();renderGoalsAll();renderDashGoals();renderChores();renderProjects();renderPlans();updateNextEvent();renderDashPaycheck();}
 
   function init(){
     loadAll();
@@ -486,6 +797,6 @@ var OG = (function() {
     addProject:addProject,toggleProject:toggleProject,deleteProject:deleteProject,
     selectUser:selectUser,pinBack:pinBack,pinInput:pinInput,pinBackspace:pinBackspace,
     onBellClick:onBellClick,doUndo:doUndo,
-    openSettings:openSettings,closeModal:closeModal,setTheme:setTheme,showDoneToday:showDoneToday
+    openSettings:openSettings,closeModal:closeModal,setTheme:setTheme,showDoneToday:showDoneToday,saveBudgetInput:saveBudgetInput,renderBudgetTab:renderBudgetTab,renderBudgetHouse:renderBudgetHouse
   };
 })();

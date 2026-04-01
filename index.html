@@ -70,9 +70,10 @@
       <div class="stat-card clickable" onclick="OG.showDoneToday()"><div class="stat-num green" id="dash-tasks-done">0</div><div class="stat-label">Done Today</div><div class="stat-hint">Tap to view →</div></div>
     </div>
     <div class="stat-row">
-      <div class="stat-card clickable" onclick="OG.navTo('money')"><div class="stat-num rose" id="dash-bills-total">$0</div><div class="stat-label">Bills Due</div><div class="stat-hint">Tap to view →</div></div>
+      <div class="stat-card clickable" onclick="OG.navTo('money');OG.moneyTab('adam',document.querySelector('#page-money .tab-pill'))"><div class="stat-num rose" id="dash-bills-total">$0</div><div class="stat-label">Bills Due</div><div class="stat-hint">Tap to view →</div></div>
       <div class="stat-card"><div class="stat-num gold" id="dash-next-event">—</div><div class="stat-label">Next Event</div></div>
     </div>
+    <div id="dash-paycheck-widget" class="dash-paycheck-widget" style="display:none;"></div>
     <div class="section-title">Today at a Glance</div>
     <div class="card" id="dash-today"><div class="empty">Nothing urgent today 🌿</div></div>
     <div class="section-title">Up Next</div>
@@ -132,11 +133,21 @@
   <div class="page-header"><div class="page-title">Money</div></div>
   <div class="content">
     <div class="tab-row">
-      <button class="tab-pill active" onclick="OG.moneyTab('bills',this)">Bills</button>
+      <button class="tab-pill active" onclick="OG.moneyTab('adam',this)">Adam</button>
+      <button class="tab-pill" onclick="OG.moneyTab('brit',this)">Brittany</button>
+      <button class="tab-pill" onclick="OG.moneyTab('house',this)">House</button>
+      <button class="tab-pill" onclick="OG.moneyTab('bills',this)">Bills</button>
       <button class="tab-pill" onclick="OG.moneyTab('mgoals',this)">Goals</button>
-      <button class="tab-pill" onclick="OG.moneyTab('subs',this)">Subscriptions</button>
+      <button class="tab-pill" onclick="OG.moneyTab('subs',this)">Subs</button>
     </div>
-    <div id="money-bills">
+    <!-- ADAM BUDGET TAB -->
+    <div id="money-adam" style="display:none"></div>
+    <!-- BRITTANY BUDGET TAB -->
+    <div id="money-brit" style="display:none"></div>
+    <!-- HOUSE BUDGET TAB -->
+    <div id="money-house" style="display:none"></div>
+    <!-- BILLS TAB -->
+    <div id="money-bills" style="display:none">
       <div class="section-title">This Month</div>
       <div class="card" id="bills-list"><div class="empty">No bills yet — add one below</div></div>
       <div class="add-row" style="flex-wrap:wrap;gap:8px;">
