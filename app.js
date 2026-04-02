@@ -144,24 +144,20 @@ var OG = (function() {
   // ══════════════════════════════════
   // PUSH SUBSCRIPTION
   // ══════════════════════════════════
-  var PUSH_SUB_KEY='ourgrowth_push_sub';
+    var PUSH_SUB_KEY='ourgrowth_push_sub';
   function subscribePush(){
     if(!('serviceWorker' in navigator)||!('PushManager' in window))return Promise.resolve(null);
     return navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub)return sub;
-        // VAPID public key — replace with yours
-        var vapidPublic='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;;
-        if(vapidPublic==='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;'){console.log('VAPID key not configured');return null;}
+        var vapidPublic='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc';
         var key=urlBase64ToUint8Array(vapidPublic);
         return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
       });
     }).then(function(sub){
       if(sub){
-        // Send subscription to sync worker
         var url=getSyncUrl();if(!url)return sub;
         var pushUrl=url+(url.endsWith('/')?'':'/')+'/push-subscribe'.replace(/^\/+/,'');
-        // Clean double slashes
         pushUrl=pushUrl.replace(/([^:]\/)\/+/g,'$1');
         fetch(pushUrl,{
           method:'POST',
@@ -182,7 +178,7 @@ var OG = (function() {
     for(var i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);
     return outputArray;
   }
-
+  
   // ══════════════════════════════════
   // SETTINGS MODAL (themes + notification prefs)
   // ══════════════════════════════════
