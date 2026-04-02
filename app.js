@@ -150,22 +150,27 @@ var OG = (function() {
     return navigator.serviceWorker.ready.then(function(reg){
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub)return sub;
-        // VAPID public key — generate yours with: npx web-push generate-vapid-keys
-        // Replace this with your actual public key
-        var vapidPublic='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc';
-        if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;// not configured yet
+        // VAPID public key — replace with yours
+        var vapidPublic='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;;
+        if(vapidPublic==='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;'){console.log('VAPID key not configured');return null;}
         var key=urlBase64ToUint8Array(vapidPublic);
         return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
       });
     }).then(function(sub){
       if(sub){
-        // Store subscription endpoint in KV via worker
+        // Send subscription to sync worker
         var url=getSyncUrl();if(!url)return sub;
-        fetch(url.replace('/shared_data','')+'/push-subscribe',{
+        var pushUrl=url+(url.endsWith('/')?'':'/')+'/push-subscribe'.replace(/^\/+/,'');
+        // Clean double slashes
+        pushUrl=pushUrl.replace(/([^:]\/)\/+/g,'$1');
+        fetch(pushUrl,{
           method:'POST',
           headers:{'Content-Type':'application/json','X-Sync-Token':SYNC_TOKEN},
           body:JSON.stringify({user:activeUser,subscription:sub.toJSON()})
-        }).catch(function(){});
+        }).then(function(res){
+          if(res.ok)console.log('Push subscription stored for '+activeUser);
+          else console.log('Push subscribe failed:',res.status);
+        }).catch(function(e){console.log('Push subscribe error:',e);});
       }
       return sub;
     }).catch(function(e){console.log('Push sub failed:',e);return null;});
@@ -329,6 +334,8 @@ var OG = (function() {
     $('lock-screen').classList.add('unlocked');$('app').style.display='';
     if(!skipWrite)localStorage.setItem(SESSION_KEY,JSON.stringify({user:activeUser,name:activeUserName,expiresAt:Date.now()+SESSION_MS}));
     updateGreeting();initNotifications();
+    // Auto-subscribe to push if permission already granted
+    if('Notification' in window&&Notification.permission==='granted')subscribePush();
   }
   function updateGreeting(){
     var h=new Date().getHours();var timeWord=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
