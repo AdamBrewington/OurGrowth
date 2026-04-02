@@ -151,8 +151,8 @@ var OG = (function() {
       return reg.pushManager.getSubscription().then(function(sub){
         if(sub)return sub;
         // VAPID public key — replace with yours
-        var vapidPublic='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;;
-        if(vapidPublic==='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5-qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;'){console.log('VAPID key not configured');return null;}
+        var vapidPublic='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;;
+        if(vapidPublic==='if(vapidPublic==='BNV2RDlh5rRXeTraywwxos__4W_xY4qvN40Rsu4Rpue3v6h0SUv5qD4TnTIOMPMAwCQOcuVbePzEAEhyl8Hajc')return null;'){console.log('VAPID key not configured');return null;}
         var key=urlBase64ToUint8Array(vapidPublic);
         return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
       });
