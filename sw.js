@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ourgrowth-v2.5';
+const CACHE_NAME = 'ourgrowth-v2.6';
 const ASSETS = [
   '/',
   '/index.html',
@@ -25,6 +25,40 @@ self.addEventListener('activate', event => {
     )
   );
   self.clients.claim();
+});
+
+// Push notification received from server
+self.addEventListener('push', event => {
+  let data = { title: 'OurGrowth', body: 'You have updates', icon: '/icon-192.png' };
+  try {
+    if (event.data) data = Object.assign(data, event.data.json());
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: data.tag || 'ourgrowth-alert',
+      renotify: true,
+      data: { url: data.url || '/' }
+    })
+  );
+});
+
+// Notification click — open or focus the app
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (let client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow(url);
+    })
+  );
 });
 
 self.addEventListener('fetch', event => {

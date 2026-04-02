@@ -5,8 +5,8 @@
 export default {
   async fetch(request, env) {
     const ALLOWED_ORIGINS = [
-      'https://ourgrowth.us',          // CHANGE THIS to your GitHub Pages domain
-      'https://ourgrowth.us',       // CHANGE THIS
+      'https://yourdomain.com',          // CHANGE THIS to your GitHub Pages domain
+      'https://www.yourdomain.com',       // CHANGE THIS
       'http://localhost:8080',
       'http://127.0.0.1:8080',
     ];
@@ -38,7 +38,22 @@ export default {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
     }
 
+    const url = new URL(request.url);
     const key = 'shared_data';
+
+    // Push subscription storage
+    if (request.method === 'POST' && url.pathname.endsWith('/push-subscribe')) {
+      const body = await request.json();
+      if (!body.user || !body.subscription) {
+        return new Response(JSON.stringify({ error: 'Missing user or subscription' }), { status: 400, headers: corsHeaders });
+      }
+      const subsRaw = await env.OURGROWTH_KV.get('push_subscriptions');
+      let subs = {};
+      try { if (subsRaw) subs = JSON.parse(subsRaw); } catch (e) {}
+      subs[body.user] = body.subscription;
+      await env.OURGROWTH_KV.put('push_subscriptions', JSON.stringify(subs));
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    }
 
     if (request.method === 'GET') {
       const data = await env.OURGROWTH_KV.get(key);

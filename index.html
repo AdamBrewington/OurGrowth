@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=2.5">
+<link rel="stylesheet" href="styles.css?v=2.6">
 </head>
 <body>
 
@@ -70,10 +70,9 @@
       <div class="stat-card clickable" onclick="OG.showDoneToday()"><div class="stat-num green" id="dash-tasks-done">0</div><div class="stat-label">Done Today</div><div class="stat-hint">Tap to view →</div></div>
     </div>
     <div class="stat-row">
-      <div class="stat-card clickable" onclick="OG.navTo('money');OG.moneyTab('budget',document.querySelectorAll('#page-money .tab-pill')[1])"><div class="stat-num gold" id="dash-budget-num">—</div><div class="stat-label">Budget</div><div class="stat-hint">Tap to view →</div></div>
+      <div class="stat-card clickable" onclick="OG.navTo('money');OG.moneyTab('budget',document.querySelectorAll('#page-money .tab-pill')[1])"><div class="stat-num gold" id="dash-budget-num">—</div><div class="stat-label" id="dash-budget-label">Budget</div><div class="stat-hint">Tap to view →</div></div>
       <div class="stat-card"><div class="stat-num gold" id="dash-next-event">—</div><div class="stat-label">Next Event</div></div>
     </div>
-    <div id="dash-paycheck-widget" class="dash-paycheck-widget" style="display:none;"></div>
     <div class="section-title">Today at a Glance</div>
     <div class="card" id="dash-today"><div class="empty">Nothing urgent today 🌿</div></div>
     <div class="section-title">Up Next</div>
@@ -95,7 +94,7 @@
         <div class="recap-cell"><div class="recap-num green" id="recap-bills-paid">0</div><div class="recap-lbl">Bills Paid</div></div>
       </div>
     </div>
-    <div class="app-version">OurGrowth v2.5</div>
+    <div class="app-version">OurGrowth v2.6</div>
   </div>
 </div>
 
@@ -272,10 +271,10 @@ if ('serviceWorker' in navigator) {
   });
   // Re-register fresh after a tick
   setTimeout(function() {
-    navigator.serviceWorker.register('sw.js?v=2.5');
+    navigator.serviceWorker.register('sw.js?v=2.6');
   }, 1000);
 }
 </script>
-<script src="app.js?v=2.5"></script>
+<script src="app.js?v=2.6"></script>
 </body>
 </html>

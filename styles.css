@@ -389,6 +389,10 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .theme-swatch-dot{width:10px;height:10px;border-radius:50%;z-index:1}
 
 .empty{text-align:center;padding:28px 16px;color:var(--text-dim);font-size:0.82rem}
+
+/* ═══ NOTIFICATION PREFS ═══ */
+.notif-pref-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:0.84rem;cursor:pointer}
+.notif-pref-row:last-child{border-bottom:none}
 ::-webkit-scrollbar{width:0}
 .app-version{font-size:0.55rem;color:var(--text-dim);text-align:center;padding:16px;letter-spacing:0.08em}
 
