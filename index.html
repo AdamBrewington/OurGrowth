@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=2.4">
+<link rel="stylesheet" href="styles.css?v=2.5">
 </head>
 <body>
 
@@ -70,7 +70,7 @@
       <div class="stat-card clickable" onclick="OG.showDoneToday()"><div class="stat-num green" id="dash-tasks-done">0</div><div class="stat-label">Done Today</div><div class="stat-hint">Tap to view →</div></div>
     </div>
     <div class="stat-row">
-      <div class="stat-card clickable" onclick="OG.navTo('money')"><div class="stat-num rose" id="dash-bills-total">$0</div><div class="stat-label">Bills Due</div><div class="stat-hint">Tap to view →</div></div>
+      <div class="stat-card clickable" onclick="OG.navTo('money');OG.moneyTab('budget',document.querySelectorAll('#page-money .tab-pill')[1])"><div class="stat-num gold" id="dash-budget-num">—</div><div class="stat-label">Budget</div><div class="stat-hint">Tap to view →</div></div>
       <div class="stat-card"><div class="stat-num gold" id="dash-next-event">—</div><div class="stat-label">Next Event</div></div>
     </div>
     <div id="dash-paycheck-widget" class="dash-paycheck-widget" style="display:none;"></div>
@@ -95,7 +95,7 @@
         <div class="recap-cell"><div class="recap-num green" id="recap-bills-paid">0</div><div class="recap-lbl">Bills Paid</div></div>
       </div>
     </div>
-    <div class="app-version">OurGrowth v2.1</div>
+    <div class="app-version">OurGrowth v2.5</div>
   </div>
 </div>
 
@@ -134,7 +134,6 @@
   <div class="content">
     <div class="tab-row">
       <button class="tab-pill active" onclick="OG.moneyTab('bills',this)">Bills</button>
-      <button class="tab-pill" onclick="OG.moneyTab('subs',this)">Subs</button>
       <button class="tab-pill" onclick="OG.moneyTab('budget',this)">Budget</button>
       <button class="tab-pill" onclick="OG.moneyTab('mgoals',this)">Goals</button>
     </div>
@@ -152,17 +151,6 @@
         <input type="checkbox" id="bill-recurring-in" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
         Recurring monthly
       </label>
-    </div>
-    <!-- SUBS TAB -->
-    <div id="money-subs" style="display:none">
-      <div class="section-title">Subscriptions</div>
-      <div class="card" id="subs-list"><div class="empty">No subscriptions yet</div></div>
-      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
-        <input class="add-input" placeholder="Service…" id="sub-name-in" style="min-width:110px;">
-        <input class="add-input" placeholder="Owner…" id="sub-owner-in" style="max-width:100px;">
-        <input class="add-input" placeholder="$" id="sub-amt-in" style="max-width:60px;" type="number" inputmode="decimal">
-        <button class="add-btn" onclick="OG.addSub()">+</button>
-      </div>
     </div>
     <!-- BUDGET TAB -->
     <div id="money-budget" style="display:none"></div>
@@ -223,7 +211,7 @@
       <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
       <div class="add-row" style="flex-wrap:wrap;gap:8px;">
         <input class="add-input" id="chore-in" placeholder="Add chore…" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')OG.addChore()">
-        <select class="add-input" id="chore-freq" style="max-width:105px;flex-shrink:0;"><option>Daily</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option></select>
+        <select class="add-input" id="chore-freq" style="max-width:105px;flex-shrink:0;"><option>Daily</option><option>Every Other Day</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option></select>
         <select class="add-input" id="chore-owner-in" style="max-width:105px;flex-shrink:0;"><option value="both">Both</option><option value="adam">Adam</option><option value="brit">Brittany</option></select>
         <input class="add-input" type="date" id="chore-date-in" style="max-width:148px;" title="Next due date">
         <button class="add-btn" onclick="OG.addChore()">+</button>
@@ -284,10 +272,10 @@ if ('serviceWorker' in navigator) {
   });
   // Re-register fresh after a tick
   setTimeout(function() {
-    navigator.serviceWorker.register('sw.js?v=2.4');
+    navigator.serviceWorker.register('sw.js?v=2.5');
   }, 1000);
 }
 </script>
-<script src="app.js?v=2.4"></script>
+<script src="app.js?v=2.5"></script>
 </body>
 </html>
