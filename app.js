@@ -12,6 +12,7 @@ var OG = (function() {
   function ensureIds(arr,prefix){if(!Array.isArray(arr))return[];arr.forEach(function(item){if(!item.id)item.id=uid(prefix);});return arr;}
   function findById(arr,id){for(var i=0;i<arr.length;i++){if(arr[i].id===id)return i;}return-1;}
   function removeById(arr,id){var i=findById(arr,id);if(i>=0)return arr.splice(i,1)[0];return null;}
+  function logChange(collection,action,summary){if(!Array.isArray(changeLog))changeLog=[];changeLog.push({id:uid("log"),ts:Date.now(),user:activeUser||"system",collection:collection,action:action,summary:String(summary||"").slice(0,120)});if(changeLog.length>200)changeLog=changeLog.slice(-200);}
 
   // ── Timezone-safe date comparison ──
   // Converts any date/ISO string to local YYYY-MM-DD for comparison
