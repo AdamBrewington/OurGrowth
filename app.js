@@ -84,7 +84,7 @@ var OG = (function() {
   var changeLog=[];
   var goalsFinancial=[],goalsLife=[],goalsRelationship=[];
   var plans=[];
-  var budget={adam:{paycheckAmount:0,nextPaycheckISO:''},brit:{paycheckAmount:0,nextPaycheckISO:''}};
+  var budget={adam:{paycheckAmount:0,nextPaycheckISO:''},brit:{paycheckAmount:0,nextPaycheckISO:''},livingCosts:0};
   var currentTaskFilter='all',currentOwner='adam';
   var expandedNotes={},expandedGoals={};
   var activeUser='',activeUserName='';
@@ -260,7 +260,7 @@ var OG = (function() {
     goalsFinancial=ensureIds(Array.isArray(d.goalsFinancial)?d.goalsFinancial:[],'gfin');goalsLife=ensureIds(Array.isArray(d.goalsLife)?d.goalsLife:[],'glif');
     goalsRelationship=ensureIds(Array.isArray(d.goalsRelationship)?d.goalsRelationship:[],'grel');
     plans=ensureIds(Array.isArray(d.plans)?d.plans:[],'plan');
-    if(d.budget&&typeof d.budget==='object'){budget=d.budget;if(!budget.adam)budget.adam={paycheckAmount:0,nextPaycheckISO:''};if(!budget.brit)budget.brit={paycheckAmount:0,nextPaycheckISO:''};}
+    if(d.budget&&typeof d.budget==='object'){budget=d.budget;if(!budget.adam)budget.adam={paycheckAmount:0,nextPaycheckISO:''};if(!budget.brit)budget.brit={paycheckAmount:0,nextPaycheckISO:''};if(typeof budget.livingCosts!=='number')budget.livingCosts=0;}
   }
   function persistPayload(payload){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(payload));}catch(e){}}
   function saveAll(skipSync){localStateUpdatedAt=Date.now();var payload={updatedAt:localStateUpdatedAt,deviceId:DEVICE_ID,data:buildState()};persistPayload(payload);if(!skipSync)queueSyncPush();}
@@ -485,15 +485,16 @@ var OG = (function() {
     if(d<0)return'⚠ Overdue '+Math.abs(d)+'d';if(d===0)return'Due Today';if(d===1)return'Due Tomorrow';if(d<=7)return'Approaching · '+fmt;return'Good · '+fmt;
   }
   function checkBillAutoReset(){var changed=false;var now=Date.now();bills.forEach(function(b){if(b.paid&&b.recurring&&b.paidAt&&(now-b.paidAt)>=86400000){var next=new Date(b.dueISO||now);next.setMonth(next.getMonth()+1);b.dueISO=next.toISOString();b.paid=false;b.paidAt=null;changed=true;}});if(changed)saveAll();}
+  function cycleBillOwner(id){var i=findById(bills,id);if(i<0)return;var seq={both:'adam',adam:'brit',brit:'both'};bills[i].owner=seq[bills[i].owner||'both']||'both';renderBills();renderBudgetTab();renderDashPaycheck();saveAll();}
   function renderBills(){
     checkBillAutoReset();var list=$('bills-list');if(!bills.length){list.innerHTML='<div class="empty">No bills yet — add one below</div>';return;}
     var sorted=bills.slice().sort(function(a,b){if(a.paid&&!b.paid)return 1;if(!a.paid&&b.paid)return-1;return billDaysUntil(a)-billDaysUntil(b);});
-    list.innerHTML=sorted.map(function(b){var id=b.id,urg=billUrgencyClass(b);return'<div class="bill-item '+urg+'"><div style="flex:1;min-width:0;"><div class="bill-name">'+esc(b.name)+(b.recurring?'<span class="bill-recurring-tag">recurring</span>':'')+'</div><div class="bill-sub">'+billStatusLabel(b)+'</div></div><div class="bill-amount">$'+Number(b.amount||0).toFixed(0)+'</div><button class="bill-status-btn" onclick="OG.toggleBillPaid(\''+id+'\')">'+(b.paid?'Paid':'Mark Paid')+'</button><button class="edit-btn" onclick="OG.editBill(\''+id+'\')" title="Edit">✏️</button><button class="del-btn" onclick="OG.deleteBill(\''+id+'\')">×</button></div>';}).join('');
+    list.innerHTML=sorted.map(function(b){var id=b.id,urg=billUrgencyClass(b);var own=b.owner||'both';var ownLabel={adam:'A',brit:'B',both:'A+B'}[own]||'A+B';var ownCls={adam:'bill-own-adam',brit:'bill-own-brit',both:'bill-own-both'}[own]||'bill-own-both';return'<div class="bill-item '+urg+'"><div style="flex:1;min-width:0;"><div class="bill-name">'+esc(b.name)+(b.recurring?'<span class="bill-recurring-tag">recurring</span>':'')+'</div><div class="bill-sub">'+billStatusLabel(b)+'</div></div><div class="bill-amount">$'+Number(b.amount||0).toFixed(0)+'</div><button class="bill-own-badge '+ownCls+'" onclick="OG.cycleBillOwner(\''+id+'\')" title="Tap to change owner">'+ownLabel+'</button><button class="bill-status-btn" onclick="OG.toggleBillPaid(\''+id+'\')">'+(b.paid?'Paid':'Mark Paid')+'</button><button class="edit-btn" onclick="OG.editBill(\''+id+'\')" title="Edit">✏️</button><button class="del-btn" onclick="OG.deleteBill(\''+id+'\')">×</button></div>';}).join('');
   }
   function toggleBillPaid(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];if(!b.paid){b.paid=true;b.paidAt=Date.now();logChange("bills","paid",b.name);if(!b.recurring){renderBills();saveAll();setTimeout(function(){removeById(bills,id);renderBills();saveAll();},600);return;}}else{b.paid=false;b.paidAt=null;}renderBills();saveAll();}
   function deleteBill(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];logChange('bills','deleted',b.name);confirmDelete(b.name,function(){removeById(bills,id);renderBills();saveAll();});}
   function editBill(id){var i=findById(bills,id);if(i<0)return;var b=bills[i];var text=prompt('Bill name:',b.name);if(text===null)return;if(text.trim())b.name=text.trim();var amt=prompt('Amount:',b.amount);if(amt!==null)b.amount=parseFloat(amt)||0;renderBills();saveAll();}
-  function addBill(){var name=$('bill-name-in').value.trim(),amt=$('bill-amt-in').value.trim(),dueIn=$('bill-due-in').value;var recurEl=$('bill-recurring-in'),recurring=recurEl?recurEl.checked:false;if(!name)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';bills.push({id:uid('bill'),name:name,amount:parseFloat(amt)||0,dueISO:dueISO,paid:false,recurring:recurring});logChange('bills','added',name);$('bill-name-in').value='';$('bill-amt-in').value='';$('bill-due-in').value='';if(recurEl)recurEl.checked=false;renderBills();saveAll();}
+  function addBill(){var name=$('bill-name-in').value.trim(),amt=$('bill-amt-in').value.trim(),dueIn=$('bill-due-in').value;var recurEl=$('bill-recurring-in'),recurring=recurEl?recurEl.checked:false;if(!name)return;var dueISO=dueIn?new Date(dueIn+'T12:00:00').toISOString():'';bills.push({id:uid('bill'),name:name,amount:parseFloat(amt)||0,dueISO:dueISO,paid:false,recurring:recurring,owner:'both'});logChange('bills','added',name);$('bill-name-in').value='';$('bill-amt-in').value='';$('bill-due-in').value='';if(recurEl)recurEl.checked=false;renderBills();saveAll();}
 
   // ══════════════════════════════════
   // MONEY TAB (no subs tab)
@@ -550,7 +551,7 @@ var OG = (function() {
   function saveNoteText(id,val){var i=findById(notes,id);if(i>=0){notes[i].text=val;clearTimeout(noteSaveTimer);noteSaveTimer=setTimeout(function(){saveAll();},800);}}
   function deleteNote(id){var removed=removeById(notes,id);if(removed)showUndo('Note','notes',removed);renderNotes();saveAll();}
   function addNote(){var now=new Date();var time=now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});notes.unshift({id:uid('note'),text:'',time:time});logChange('notes','added','New note');renderNotes();saveAll();var ta=document.querySelector('.note-card textarea');if(ta)ta.focus();}
-  function renderGrocery(){checkGroceryReset();var list=$('grocery-list');if(!groceryItems.length){list.innerHTML='<div class="empty">List is clear</div>';return;}var sorted=groceryItems.slice().sort(function(a,b){return (b.locked?1:0)-(a.locked?1:0);});list.innerHTML=sorted.map(function(item){var id=item.id;var lockIcon=item.locked?'🔒':'🔓';return'<div class="task-item"><div class="task-check'+(item.checked?' done':'')+'" onclick="OG.toggleGrocery(\''+id+'\')"></div><div class="task-text'+(item.checked?' done':'')+'" onclick="OG.toggleGrocery(\''+id+'\')">'+esc(item.text)+'</div><button class="edit-btn" onclick="OG.toggleGroceryLock(\''+id+'\')" title="Lock keeps item, resets 48hr after checked">'+lockIcon+'</button><button class="del-btn" onclick="OG.deleteGrocery(\''+id+'\')">×</button></div>';}).join('');}
+  function renderGrocery(){checkGroceryReset();var list=$('grocery-list');if(!groceryItems.length){list.innerHTML='<div class="empty">List is clear</div>';return;}var sorted=groceryItems.slice().sort(function(a,b){return (b.locked?1:0)-(a.locked?1:0);});list.innerHTML=sorted.map(function(item){var id=item.id;var lockCls=item.locked?'grocery-lock-btn is-locked':'grocery-lock-btn';var lockIcon=item.locked?'🔒':'🔓';return'<div class="task-item"><div class="task-check'+(item.checked?' done':'')+'" onclick="OG.toggleGrocery(\''+id+'\')"></div><div class="task-text'+(item.checked?' done':'')+'" onclick="OG.toggleGrocery(\''+id+'\')">'+esc(item.text)+'</div><button class="'+lockCls+'" onclick="OG.toggleGroceryLock(\''+id+'\')" title="Lock keeps item on list">'+lockIcon+'</button><button class="del-btn" onclick="OG.deleteGrocery(\''+id+'\')">×</button></div>';}).join('');}
   function toggleGrocery(id){var i=findById(groceryItems,id);if(i>=0){groceryItems[i].checked=!groceryItems[i].checked;groceryItems[i].checkedAt=groceryItems[i].checked?Date.now():null;renderGrocery();saveAll();}}
   function deleteGrocery(id){var removed=removeById(groceryItems,id);if(removed)showUndo(removed.text,'groceryItems',removed);renderGrocery();saveAll();}
   function addGrocery(){var inp=$('grocery-in'),v=inp.value.trim();if(!v)return;groceryItems.push({id:uid('groc'),text:v,checked:false,locked:false,checkedAt:null});logChange('groceryItems','added',v);inp.value='';renderGrocery();saveAll();}
@@ -620,100 +621,164 @@ var OG = (function() {
   // ══════════════════════════════════
 
   // ══════════════════════════════════
-  // BUDGET ENGINE
+  // BUDGET ENGINE — Period-based (no monthly smoothing)
   // ══════════════════════════════════
-  function budgetMonthlyIncome(person){var b=budget[person];if(!b||!b.paycheckAmount)return 0;return b.paycheckAmount*26/12;}
   function autoAdvancePaycheck(person){var b=budget[person];if(!b||!b.nextPaycheckISO)return;var now=new Date();now.setHours(0,0,0,0);var next=new Date(b.nextPaycheckISO);next.setHours(0,0,0,0);var changed=false;while(next<now){next.setDate(next.getDate()+14);changed=true;}if(changed){b.nextPaycheckISO=next.toISOString();saveAll();}}
   function daysUntilPaycheck(person){var b=budget[person];if(!b||!b.nextPaycheckISO)return null;autoAdvancePaycheck(person);return daysDiff(b.nextPaycheckISO);}
-  function totalSubsMonthly(){return subs.reduce(function(s,sub){return s+parseFloat(sub.amount||0);},0);}
-  function totalBillsMonthly(){return bills.filter(function(b){return!b.paid;}).reduce(function(s,b){return s+parseFloat(b.amount||0);},0);}
-  function saveBudgetInput(person,field,val){
-    if(!budget[person])budget[person]={paycheckAmount:0,nextPaycheckISO:''};
-    if(field==='amount')budget[person].paycheckAmount=parseFloat(val)||0;
-    if(field==='date')budget[person].nextPaycheckISO=val?new Date(val+'T12:00:00').toISOString():'';
-    autoAdvancePaycheck(person);renderBudgetTab();renderDashPaycheck();saveAll();
+
+  // Bills due strictly before a given nextPaycheckISO, filtered by owner
+  // owner: 'adam'|'brit' matches bills assigned to that person
+  // owner: 'household' matches ALL unpaid bills
+  function billsDueThisPeriod(ownerFilter, nextISO){
+    if(!nextISO)return 0;
+    var cutoffDays=daysDiff(nextISO);
+    return bills.filter(function(b){
+      if(b.paid||!b.dueISO)return false;
+      var diff=daysDiff(b.dueISO);
+      if(diff<0||diff>=cutoffDays)return false;// only today up to (not including) payday
+      if(ownerFilter==='household')return true;
+      var own=b.owner||'both';
+      return own===ownerFilter||own==='both';
+    }).reduce(function(t,b){return t+parseFloat(b.amount||0);},0);
   }
+
+  function periodLeft(person){
+    var b=budget[person];if(!b||!b.paycheckAmount)return null;
+    autoAdvancePaycheck(person);
+    var deductions=billsDueThisPeriod(person,b.nextPaycheckISO);
+    var halfLiving=(budget.livingCosts||0)/2;
+    return b.paycheckAmount-deductions-halfLiving;
+  }
+
+  function householdPeriodLeft(){
+    autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
+    var adamPay=budget.adam.paycheckAmount||0;var britPay=budget.brit.paycheckAmount||0;
+    if(!adamPay&&!britPay)return null;
+    // Use the sooner of the two paydays as the cutoff
+    var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
+    var earlierISO=null;
+    if(adamDays!==null&&britDays!==null)earlierISO=adamDays<=britDays?budget.adam.nextPaycheckISO:budget.brit.nextPaycheckISO;
+    else if(adamDays!==null)earlierISO=budget.adam.nextPaycheckISO;
+    else if(britDays!==null)earlierISO=budget.brit.nextPaycheckISO;
+    var deductions=earlierISO?billsDueThisPeriod('household',earlierISO):0;
+    return (adamPay+britPay)-deductions-(budget.livingCosts||0);
+  }
+
+  function saveBudgetInput(person,field,val){
+    if(person==='shared'){
+      if(field==='living')budget.livingCosts=parseFloat(val)||0;
+    }else{
+      if(!budget[person])budget[person]={paycheckAmount:0,nextPaycheckISO:''};
+      if(field==='amount')budget[person].paycheckAmount=parseFloat(val)||0;
+      if(field==='date')budget[person].nextPaycheckISO=val?new Date(val+'T12:00:00').toISOString():'';
+      autoAdvancePaycheck(person);
+    }
+    renderBudgetTab();renderDashPaycheck();saveAll();
+  }
+
   function renderBudgetTab(){
     var el=$('money-budget');if(!el)return;
+    autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
     var adamB=budget.adam||{};var britB=budget.brit||{};
-    var adamMonthly=budgetMonthlyIncome('adam');var britMonthly=budgetMonthlyIncome('brit');
-    var combined=adamMonthly+britMonthly;var committed=totalBillsMonthly()+totalSubsMonthly();var surplus=combined-committed;
-    var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
-    var nextDays=adamDays!==null?adamDays:britDays;
-    if(adamDays!==null&&britDays!==null)nextDays=Math.min(adamDays,britDays);
-    var daysLabel=nextDays===null?'':nextDays===0?'Payday! 🎉':nextDays===1?'Tomorrow':nextDays+' days';
-    var dailyBudget=(nextDays&&nextDays>0&&surplus>0)?(surplus/30).toFixed(0):0;
     var adamDateVal=adamB.nextPaycheckISO?new Date(adamB.nextPaycheckISO).toISOString().split('T')[0]:'';
     var britDateVal=britB.nextPaycheckISO?new Date(britB.nextPaycheckISO).toISOString().split('T')[0]:'';
+    var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
+    var nextDays=null;
+    if(adamDays!==null&&britDays!==null)nextDays=Math.min(adamDays,britDays);
+    else if(adamDays!==null)nextDays=adamDays;
+    else if(britDays!==null)nextDays=britDays;
+    var daysLabel=nextDays===null?'':nextDays===0?'Payday! 🎉':nextDays===1?'Tomorrow':nextDays+' days';
 
-    // Bills due BEFORE payday (strict < not <=)
-    var billsBeforePay='';
-    if(nextDays!==null&&nextDays>0){
-      var now=new Date();var nLocal=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-      var payLocal=new Date(nLocal);payLocal.setDate(payLocal.getDate()+nextDays);
-      var before=bills.filter(function(b){
-        if(b.paid||!b.dueISO)return false;
-        var diff=daysDiff(b.dueISO);
-        return diff>=0&&diff<nextDays;// strict less than — payday bills are NOT "before"
-      });
-      if(before.length){
-        var bTotal=before.reduce(function(t,b){return t+parseFloat(b.amount||0);},0);
-        billsBeforePay='<div class="budget-section-label">Due Before Payday</div><div class="budget-timing-list">'+
-          before.map(function(b){var d=daysDiff(b.dueISO);var cls=d<=1?'timing-red':d<=4?'timing-amber':'timing-green';return'<div class="budget-timing-item '+cls+'"><span>'+esc(b.name)+'</span><span>$'+Number(b.amount||0).toFixed(0)+'</span></div>';}).join('')+
-          '<div class="budget-timing-item" style="font-weight:500;margin-top:4px;border-top:1px solid var(--border);padding-top:6px;"><span>Total</span><span>$'+bTotal.toFixed(0)+'</span></div></div>';
-      }
+    function periodCard(label,person,leftVal,days){
+      var b=budget[person]||{};if(!b.paycheckAmount)return'';
+      var deductions=billsDueThisPeriod(person,b.nextPaycheckISO);
+      var halfLiving=(budget.livingCosts||0)/2;
+      var color=leftVal>=0?'var(--green)':'var(--rose)';
+      var pct=b.paycheckAmount>0?Math.min(100,Math.max(0,Math.round((b.paycheckAmount-(deductions+halfLiving))/b.paycheckAmount*100))):0;
+      var dueItems=bills.filter(function(bx){if(bx.paid||!bx.dueISO)return false;var diff=daysDiff(bx.dueISO);var own=bx.owner||'both';return(own===person||own==='both')&&diff>=0&&diff<(days||14);});
+      var dueList=dueItems.length?'<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">'+dueItems.map(function(bx){var d=daysDiff(bx.dueISO);var cls=d<=1?'timing-red':d<=4?'timing-amber':'timing-green';return'<div class="budget-timing-item '+cls+'"><span>'+esc(bx.name)+'</span><span>−$'+Number(bx.amount||0).toFixed(0)+'</span></div>';}).join('')+'</div>':'';
+      return'<div class="card" style="margin-bottom:10px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+          '<div class="card-label" style="margin:0;">'+label+'</div>'+
+          '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.7rem;font-weight:300;color:'+color+';">'+(leftVal>=0?'+':'')+' $'+Math.abs(leftVal).toFixed(0)+'</div>'+
+        '</div>'+
+        '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+pct+'%;background:'+(leftVal>=0?'var(--green)':'var(--rose)')+'"></div></div>'+
+        '<div class="budget-line-row"><span>This check</span><span>$'+Number(b.paycheckAmount).toFixed(0)+'</span></div>'+
+        (deductions>0?'<div class="budget-line-row"><span>Bills this period</span><span style="color:var(--rose);">−$'+deductions.toFixed(0)+'</span></div>':'')+
+        (halfLiving>0?'<div class="budget-line-row"><span>Living costs (½)</span><span style="color:var(--text-muted);">−$'+halfLiving.toFixed(0)+'</span></div>':'')+
+        dueList+
+      '</div>';
     }
 
+    var hLeft=householdPeriodLeft();
+    var householdCard='';
+    if(hLeft!==null){
+      var adamPay=adamB.paycheckAmount||0;var britPay=britB.paycheckAmount||0;
+      var combined=adamPay+britPay;
+      var earlierISO=null;
+      if(adamDays!==null&&britDays!==null)earlierISO=adamDays<=britDays?adamB.nextPaycheckISO:britB.nextPaycheckISO;
+      else if(adamDays!==null)earlierISO=adamB.nextPaycheckISO;
+      else if(britDays!==null)earlierISO=britB.nextPaycheckISO;
+      var hDeductions=earlierISO?billsDueThisPeriod('household',earlierISO):0;
+      var hColor=hLeft>=0?'var(--green)':'var(--rose)';
+      var hPct=combined>0?Math.min(100,Math.max(0,Math.round(hLeft/combined*100))):0;
+      var hDays=nextDays||14;
+      var hDueItems=bills.filter(function(bx){if(bx.paid||!bx.dueISO)return false;var diff=daysDiff(bx.dueISO);return diff>=0&&diff<hDays;});
+      var hDueList=hDueItems.length?'<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">'+hDueItems.map(function(bx){var d=daysDiff(bx.dueISO);var cls=d<=1?'timing-red':d<=4?'timing-amber':'timing-green';var own=bx.owner||'both';var ownLbl={adam:'A',brit:'B',both:'A+B'}[own]||'A+B';return'<div class="budget-timing-item '+cls+'"><span>'+esc(bx.name)+' <span class="bill-own-badge bill-own-'+own+'" style="font-size:0.52rem;padding:1px 5px;">'+ownLbl+'</span></span><span>−$'+Number(bx.amount||0).toFixed(0)+'</span></div>';}).join('')+'</div>':'';
+      householdCard='<div class="section-title">Household This Period</div><div class="card" style="margin-bottom:10px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+          '<div class="card-label" style="margin:0;">Combined</div>'+
+          '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.7rem;font-weight:300;color:'+hColor+';">'+(hLeft>=0?'+':'')+' $'+Math.abs(hLeft).toFixed(0)+'</div>'+
+        '</div>'+
+        '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+hPct+'%;background:'+(hLeft>=0?'var(--green)':'var(--rose)')+'"></div></div>'+
+        '<div class="budget-line-row"><span>Combined checks</span><span>$'+combined.toFixed(0)+'</span></div>'+
+        (hDeductions>0?'<div class="budget-line-row"><span>All bills this period</span><span style="color:var(--rose);">−$'+hDeductions.toFixed(0)+'</span></div>':'')+
+        ((budget.livingCosts||0)>0?'<div class="budget-line-row"><span>Living costs</span><span style="color:var(--text-muted);">−$'+(budget.livingCosts).toFixed(0)+'</span></div>':'')+
+        hDueList+
+      '</div>';
+    }
+
+    var adamLeft=periodLeft('adam');var britLeft=periodLeft('brit');
     el.innerHTML=
       '<div class="card"><div class="card-label">Paycheck Setup</div>'+
-      '<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Bi-weekly · Same pay schedule</div>'+
       '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">'+
         '<span style="font-size:0.72rem;color:var(--text-muted);min-width:60px;">Adam</span>'+
         '<input class="add-input" type="number" inputmode="decimal" placeholder="$ per check" value="'+(adamB.paycheckAmount||'')+'" style="flex:1;min-width:100px;" oninput="OG.saveBudgetInput(\'adam\',\'amount\',this.value)">'+
         '<input class="add-input" type="date" value="'+adamDateVal+'" style="max-width:150px;" onchange="OG.saveBudgetInput(\'adam\',\'date\',this.value)">'+
       '</div>'+
-      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+
+      '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">'+
         '<span style="font-size:0.72rem;color:var(--text-muted);min-width:60px;">Brittany</span>'+
         '<input class="add-input" type="number" inputmode="decimal" placeholder="$ per check" value="'+(britB.paycheckAmount||'')+'" style="flex:1;min-width:100px;" oninput="OG.saveBudgetInput(\'brit\',\'amount\',this.value)">'+
         '<input class="add-input" type="date" value="'+britDateVal+'" style="max-width:150px;" onchange="OG.saveBudgetInput(\'brit\',\'date\',this.value)">'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'+
+        '<span style="font-size:0.72rem;color:var(--text-muted);min-width:60px;">Living</span>'+
+        '<input class="add-input" type="number" inputmode="decimal" placeholder="Shared living costs per period (groceries, gas…)" value="'+(budget.livingCosts||'')+'" style="flex:1;min-width:100px;" oninput="OG.saveBudgetInput(\'shared\',\'living\',this.value)">'+
       '</div></div>'+
       (daysLabel?'<div class="budget-countdown"><div class="bcd-days">'+daysLabel+'</div><div class="bcd-label">until next payday</div></div>':'')+
-      (combined>0?
-        '<div class="card"><div class="card-label">Monthly Overview</div>'+
-        '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+Math.min(100,(committed/(combined||1)*100)).toFixed(1)+'%;background:'+(committed>combined?'var(--rose)':'var(--accent)')+'"></div></div>'+
-        '<div class="budget-line-row"><span>Combined Income</span><span>$'+combined.toFixed(0)+'</span></div>'+
-        (adamMonthly?'<div class="budget-line-row" style="font-size:0.76rem;color:var(--text-muted);"><span>&nbsp;&nbsp;Adam</span><span>$'+adamMonthly.toFixed(0)+'</span></div>':'')+
-        (britMonthly?'<div class="budget-line-row" style="font-size:0.76rem;color:var(--text-muted);"><span>&nbsp;&nbsp;Brittany</span><span>$'+britMonthly.toFixed(0)+'</span></div>':'')+
-        '<div class="budget-line-row"><span>Bills + Subs</span><span style="color:var(--rose);">−$'+committed.toFixed(0)+'</span></div>'+
-        '<div class="budget-line-row" style="font-weight:600;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span>Remaining</span><span style="color:'+(surplus>=0?'var(--green)':'var(--rose)')+';">'+(surplus>=0?'+':'')+' $'+Math.abs(surplus).toFixed(0)+'</span></div>'+
-        (dailyBudget>0?'<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:8px;">≈ $'+dailyBudget+'/day discretionary</div>':'')+
-        '</div>'
-      :'<div class="card"><div class="empty">Enter paycheck amounts above to see your budget</div></div>')+
-      billsBeforePay;
+      '<div class="section-title">This Period</div>'+
+      (adamLeft!==null?periodCard('Adam\'s Check','adam',adamLeft,adamDays):'<div class="card"><div class="empty">Enter Adam\'s paycheck to see his budget</div></div>')+
+      (britLeft!==null?periodCard('Brittany\'s Check','brit',britLeft,britDays):'<div class="card"><div class="empty">Enter Brittany\'s paycheck to see her budget</div></div>')+
+      householdCard;
   }
+
   function renderDashPaycheck(){
     autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
     var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
-    var combined=budgetMonthlyIncome('adam')+budgetMonthlyIncome('brit');
-    var committed=totalBillsMonthly()+totalSubsMonthly();
-    var surplus=combined-committed;
-    // Budget stat card number
+    var hLeft=householdPeriodLeft();
     var budgetEl=$('dash-budget-num');
     if(budgetEl){
-      if(combined>0){budgetEl.textContent=(surplus>=0?'+':'-')+' $'+Math.abs(surplus).toFixed(0);budgetEl.className='stat-num '+(surplus>=0?'green':'rose');}
+      if(hLeft!==null){budgetEl.textContent=(hLeft>=0?'+':'-')+' $'+Math.abs(hLeft).toFixed(0);budgetEl.className='stat-num '+(hLeft>=0?'green':'rose');}
       else{budgetEl.textContent='—';budgetEl.className='stat-num gold';}
     }
-    // Budget stat card label — include payday countdown
     var labelEl=$('dash-budget-label');
     if(labelEl){
       var days=null;
       if(adamDays!==null&&britDays!==null)days=Math.min(adamDays,britDays);
       else if(adamDays!==null)days=adamDays;
       else if(britDays!==null)days=britDays;
-      if(days!==null){
-        var payStr=days===0?'Payday!':days===1?'Payday tomorrow':days+'d to payday';
-        labelEl.textContent='Budget · '+payStr;
-      }else{labelEl.textContent='Budget';}
+      if(days!==null){var payStr=days===0?'Payday!':days===1?'Payday tomorrow':days+'d to payday';labelEl.textContent='Period Left · '+payStr;}
+      else{labelEl.textContent='Period Left';}
     }
   }
 
@@ -735,7 +800,7 @@ var OG = (function() {
 
   return {
     navTo:navTo,setOwner:setOwner,filterTasks:filterTasks,addTask:addTask,toggleTask:toggleTask,deleteTask:deleteTask,editTask:editTask,saveTaskEdit:saveTaskEdit,toggleTaskNotes:toggleTaskNotes,saveTaskNote:saveTaskNote,renderTasks:renderTasks,
-    addBill:addBill,toggleBillPaid:toggleBillPaid,deleteBill:deleteBill,editBill:editBill,moneyTab:moneyTab,
+    addBill:addBill,toggleBillPaid:toggleBillPaid,deleteBill:deleteBill,editBill:editBill,cycleBillOwner:cycleBillOwner,moneyTab:moneyTab,
     addGoal:addGoal,updateGoalLabels:updateGoalLabels,toggleGoalEdit:toggleGoalEdit,saveGoalEdit:saveGoalEdit,cancelGoalEdit:cancelGoalEdit,deleteGoal:deleteGoal,
     notesTab:notesTab,addNote:addNote,saveNoteText:saveNoteText,deleteNote:deleteNote,
     addGrocery:addGrocery,toggleGrocery:toggleGrocery,deleteGrocery:deleteGrocery,toggleGroceryLock:toggleGroceryLock,clearGrocery:clearGrocery,

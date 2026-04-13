@@ -688,3 +688,13 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .tl-green { color: var(--green); }
 .tl-red { color: var(--rose); }
 .timeline-pay .tl-label { font-weight: 500; }
+
+/* ═══ BILL OWNER BADGE ═══ */
+.bill-own-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.06em;padding:3px 8px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;font-family:'DM Sans',sans-serif;transition:all 0.18s}
+.bill-own-adam{background:var(--accent-soft);color:var(--accent)}
+.bill-own-brit{background:var(--rose-soft);color:var(--rose)}
+.bill-own-both{background:rgba(128,128,128,0.1);color:var(--text-muted)}
+
+/* ═══ GROCERY LOCK ═══ */
+.grocery-lock-btn{font-size:0.78rem;cursor:pointer;padding:4px 7px;transition:all 0.15s;flex-shrink:0;background:none;border:none;opacity:0.25;color:var(--text-muted)}
+.grocery-lock-btn.is-locked{opacity:1;color:var(--accent);background:var(--accent-soft);border-radius:8px}
