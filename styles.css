@@ -299,7 +299,6 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .chore-owner.own-brit{background:var(--rose-soft);color:var(--rose)}
 .chore-owner.own-both{background:rgba(128,128,128,0.08);color:var(--text-muted)}
 .chore-streak{font-size:0.72rem;flex-shrink:0;min-width:28px;text-align:right}
-.chore-freq-tag{font-size:0.54rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-dim);background:rgba(128,128,128,0.06);padding:1px 5px;border-radius:6px;margin-left:4px}
 
 /* ═══ TODAY/RECAP ═══ */
 .today-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
@@ -389,312 +388,38 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .theme-swatch-dot{width:10px;height:10px;border-radius:50%;z-index:1}
 
 .empty{text-align:center;padding:28px 16px;color:var(--text-dim);font-size:0.82rem}
-
-/* ═══ NOTIFICATION PREFS ═══ */
-.notif-pref-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:0.84rem;cursor:pointer}
-.notif-pref-row:last-child{border-bottom:none}
 ::-webkit-scrollbar{width:0}
 .app-version{font-size:0.55rem;color:var(--text-dim);text-align:center;padding:16px;letter-spacing:0.08em}
 
-/* ═══════════════════════════════════════
-   BUDGET SYSTEM
-   ═══════════════════════════════════════ */
-
-/* ── Dashboard Paycheck Widget ── */
-.dash-paycheck-widget {
-  margin: 0 0 10px;
-  padding: 11px 16px;
+/* ═══ v2.6 BILL CHECK ASSIGNMENT + INLINE EDIT ═══ */
+.bill-check-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
   background: var(--accent-dim);
-  border: 1px solid var(--accent-soft);
+  padding: 2px 7px;
+  border-radius: 8px;
+  margin-left: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.bill-edit-form {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(128,128,128,0.04);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  color: var(--accent);
-  letter-spacing: 0.03em;
-  font-weight: 500;
+  animation: fadeUp 0.2s ease;
 }
-
-/* ── Budget Setup Card ── */
-.budget-setup-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* ── Paycheck Countdown ── */
-.budget-countdown {
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  margin-bottom: 12px;
+.bill-edit-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-.bcd-days {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.4rem;
-  font-weight: 300;
-  color: var(--accent);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.bcd-label {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-/* ── Health Score ── */
-.budget-health {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 12px;
-}
-.bh-grade {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 3.5rem;
-  font-weight: 300;
-  line-height: 1;
-  flex-shrink: 0;
-  min-width: 52px;
-  text-align: center;
-}
-.bh-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.bh-insight {
-  font-size: 0.82rem;
-  color: var(--text);
-  line-height: 1.4;
-}
-
-/* ── Budget Summary Bar ── */
-.budget-summary {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-}
-.budget-bar-wrap {
-  height: 6px;
-  background: rgba(128,128,128,0.1);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.budget-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.5s ease;
-}
-.budget-line-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.84rem;
-  padding: 5px 0;
-  color: var(--text);
-}
-.budget-line-row span:last-child {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.05rem;
-}
-
-/* ── Section Labels ── */
-.budget-section-label {
-  font-size: 0.63rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 500;
-  margin: 18px 0 8px;
-  display: flex;
-  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
-.budget-section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.bill-edit-row:last-child {
+  margin-bottom: 0;
 }
-
-/* ── Bill Timing List ── */
-.budget-timing-list {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-.budget-timing-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.84rem;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-}
-.budget-timing-item:last-child { border-bottom: none; }
-.budget-timing-item span:last-child {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-.timing-red span:first-child { color: var(--rose); }
-.timing-amber span:first-child { color: var(--accent); }
-.timing-green span:first-child { color: var(--green); }
-
-/* ── Savings Box ── */
-.budget-savings-box {
-  background: var(--green-soft);
-  border: 1px solid var(--green);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 12px;
-}
-.budget-savings-title {
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--green);
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-.budget-sav-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.84rem;
-  padding: 5px 0;
-  color: var(--text);
-}
-.budget-sav-amt {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem;
-  color: var(--green);
-  font-weight: 600;
-}
-
-/* ── Subscription Audit ── */
-.budget-sub-audit {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  text-align: center;
-}
-.budget-sub-audit.flag {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-}
-.bsa-num {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.4rem;
-  font-weight: 300;
-  color: var(--text);
-  line-height: 1;
-}
-.bsa-num span {
-  font-size: 1rem;
-  color: var(--text-muted);
-}
-.bsa-pct {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin: 4px 0 8px;
-  letter-spacing: 0.04em;
-}
-.bsa-flag {
-  font-size: 0.76rem;
-  color: var(--accent);
-  font-weight: 500;
-}
-.bsa-flag.ok { color: var(--green); }
-
-/* ── Split Box (House tab) ── */
-.budget-split-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 12px;
-}
-.split-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.84rem;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-}
-.split-row:last-child { border-bottom: none; }
-.split-amt {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem;
-  color: var(--accent);
-}
-
-/* ── 30-Day Timeline (House tab) ── */
-.budget-timeline {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  margin-bottom: 16px;
-}
-.timeline-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.82rem;
-}
-.timeline-item:last-child { border-bottom: none; }
-.timeline-pay { background: transparent; }
-.timeline-bill { background: transparent; }
-.tl-date {
-  font-size: 0.64rem;
-  color: var(--text-muted);
-  min-width: 56px;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-}
-.tl-label { flex: 1; color: var(--text); }
-.tl-amt {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-.tl-green { color: var(--green); }
-.tl-red { color: var(--rose); }
-.timeline-pay .tl-label { font-weight: 500; }
-
-/* ═══ BILL OWNER BADGE ═══ */
-.bill-own-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.06em;padding:3px 8px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;font-family:'DM Sans',sans-serif;transition:all 0.18s}
-.bill-own-adam{background:var(--accent-soft);color:var(--accent)}
-.bill-own-brit{background:var(--rose-soft);color:var(--rose)}
-.bill-own-both{background:rgba(128,128,128,0.1);color:var(--text-muted)}
-
-/* ═══ GROCERY LOCK ═══ */
-.grocery-lock-btn{font-size:0.78rem;cursor:pointer;padding:4px 7px;transition:all 0.15s;flex-shrink:0;background:none;border:none;opacity:0.25;color:var(--text-muted)}
-.grocery-lock-btn.is-locked{opacity:1;color:var(--accent);background:var(--accent-soft);border-radius:8px}

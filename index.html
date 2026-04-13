@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>OurGrowth</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=2.8">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -70,7 +70,7 @@
       <div class="stat-card clickable" onclick="OG.showDoneToday()"><div class="stat-num green" id="dash-tasks-done">0</div><div class="stat-label">Done Today</div><div class="stat-hint">Tap to view →</div></div>
     </div>
     <div class="stat-row">
-      <div class="stat-card clickable" onclick="OG.navTo('money');OG.moneyTab('budget',document.querySelectorAll('#page-money .tab-pill')[1])"><div class="stat-num gold" id="dash-budget-num">—</div><div class="stat-label" id="dash-budget-label">Budget</div><div class="stat-hint">Tap to view →</div></div>
+      <div class="stat-card clickable" onclick="OG.navTo('money')"><div class="stat-num rose" id="dash-bills-total">$0</div><div class="stat-label">Bills Due</div><div class="stat-hint">Tap to view →</div></div>
       <div class="stat-card"><div class="stat-num gold" id="dash-next-event">—</div><div class="stat-label">Next Event</div></div>
     </div>
     <div class="section-title">Today at a Glance</div>
@@ -94,7 +94,7 @@
         <div class="recap-cell"><div class="recap-num green" id="recap-bills-paid">0</div><div class="recap-lbl">Bills Paid</div></div>
       </div>
     </div>
-    <div class="app-version">OurGrowth v2.8</div>
+    <div class="app-version">OurGrowth v2.1</div>
   </div>
 </div>
 
@@ -133,10 +133,9 @@
   <div class="content">
     <div class="tab-row">
       <button class="tab-pill active" onclick="OG.moneyTab('bills',this)">Bills</button>
-      <button class="tab-pill" onclick="OG.moneyTab('budget',this)">Budget</button>
       <button class="tab-pill" onclick="OG.moneyTab('mgoals',this)">Goals</button>
+      <button class="tab-pill" onclick="OG.moneyTab('subs',this)">Subscriptions</button>
     </div>
-    <!-- BILLS TAB (default, visible) -->
     <div id="money-bills">
       <div class="section-title">This Month</div>
       <div class="card" id="bills-list"><div class="empty">No bills yet — add one below</div></div>
@@ -146,15 +145,30 @@
         <input class="add-input" type="date" id="bill-due-in" style="max-width:148px;" title="Due date">
         <button class="add-btn" onclick="OG.addBill()">+</button>
       </div>
+      <div class="add-row" style="margin-top:8px;">
+        <select class="add-input" id="bill-check-in" style="flex:1;" title="Assign to paycheck">
+          <option value="0">Unassigned</option>
+          <option value="1">Pay from Check 1</option>
+          <option value="2">Pay from Check 2</option>
+          <option value="3">Pay from Check 3</option>
+        </select>
+      </div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:0.78rem;color:var(--text-muted);cursor:pointer;">
         <input type="checkbox" id="bill-recurring-in" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
         Recurring monthly
       </label>
     </div>
-    <!-- BUDGET TAB -->
-    <div id="money-budget" style="display:none"></div>
-    <!-- GOALS TAB -->
     <div id="money-mgoals" style="display:none"><div class="section-title">Savings Goals</div><div class="card" id="savings-list"><div class="empty">Add goals in the Goals tab</div></div></div>
+    <div id="money-subs" style="display:none">
+      <div class="section-title">Subscriptions</div>
+      <div class="card" id="subs-list"><div class="empty">No subscriptions yet</div></div>
+      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
+        <input class="add-input" placeholder="Service…" id="sub-name-in" style="min-width:110px;">
+        <input class="add-input" placeholder="Owner…" id="sub-owner-in" style="max-width:100px;">
+        <input class="add-input" placeholder="$" id="sub-amt-in" style="max-width:60px;" type="number" inputmode="decimal">
+        <button class="add-btn" onclick="OG.addSub()">+</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -170,7 +184,7 @@
       <div id="notes-list"><div class="empty">Tap below to add a note</div></div>
       <button class="add-btn" onclick="OG.addNote()" style="width:100%;margin-top:8px;padding:13px;border-radius:var(--radius-sm);font-size:0.85rem;font-family:'DM Sans',sans-serif;font-weight:400;">+ New Note</button>
     </div>
-    <div id="notes-grocery" style="display:none"><div style="text-align:right;margin-bottom:6px;"><button class="mini-btn" onclick="OG.clearGrocery()">Clear unlocked</button></div><div class="card" id="grocery-list"><div class="empty">List is clear</div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')OG.addGrocery()"><button class="add-btn" onclick="OG.addGrocery()">+</button></div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="discuss-in" placeholder="Add topic…" onkeydown="if(event.key==='Enter')OG.addDiscuss()"><button class="add-btn" onclick="OG.addDiscuss()">+</button></div></div>
+    <div id="notes-grocery" style="display:none"><div class="card" id="grocery-list"><div class="empty">List is clear</div></div><div class="add-row" style="margin-top:10px;"><input class="add-input" id="grocery-in" placeholder="Add item…" onkeydown="if(event.key==='Enter')OG.addGrocery()"><button class="add-btn" onclick="OG.addGrocery()">+</button></div></div>
   </div>
 </div>
 
@@ -192,6 +206,31 @@
         <input type="checkbox" id="plan-recurring" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
         Repeat yearly
       </label>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="page" id="page-home">
+  <div class="page-header"><div class="page-title">Home</div></div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab-pill active" onclick="OG.homeTab('chores',this)">Chores</button>
+      <button class="tab-pill" onclick="OG.homeTab('projects',this)">Projects</button>
+    </div>
+    <div id="home-chores">
+      <div class="card" id="chores-list"><div class="empty">No chores yet</div></div>
+      <div class="add-row" style="flex-wrap:wrap;gap:8px;">
+        <input class="add-input" id="chore-in" placeholder="Add chore…" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')OG.addChore()">
+        <select class="add-input" id="chore-freq" style="max-width:105px;flex-shrink:0;"><option>Daily</option><option selected>Weekly</option><option>Biweekly</option><option>Monthly</option></select>
+        <select class="add-input" id="chore-owner-in" style="max-width:105px;flex-shrink:0;"><option value="both">Both</option><option value="adam">Adam</option><option value="brit">Brittany</option></select>
+        <input class="add-input" type="date" id="chore-date-in" style="max-width:148px;" title="Next due date">
+        <button class="add-btn" onclick="OG.addChore()">+</button>
+      </div>
+    </div>
+    <div id="home-projects" style="display:none">
+      <div class="card" id="projects-list"><div class="empty">No projects yet</div></div>
+      <div class="add-row"><input class="add-input" id="project-in" placeholder="Add project…" onkeydown="if(event.key==='Enter')OG.addProject()"><button class="add-btn" onclick="OG.addProject()">+</button></div>
     </div>
   </div>
 </div>
@@ -231,22 +270,11 @@
   <button class="nav-item" id="nav-money" onclick="OG.navTo('money')"><span class="nav-icon">💰</span><span class="nav-label">Money</span></button>
   <button class="nav-item" id="nav-notes" onclick="OG.navTo('notes')"><span class="nav-icon">📝</span><span class="nav-label">Notes</span></button>
   <button class="nav-item" id="nav-plans" onclick="OG.navTo('plans')"><span class="nav-icon">📅</span><span class="nav-label">Plans</span></button>
+  <button class="nav-item" id="nav-home" onclick="OG.navTo('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
   <button class="nav-item" id="nav-goals" onclick="OG.navTo('goals')"><span class="nav-icon">🎯</span><span class="nav-label">Goals</span></button>
 </nav>
 </div>
 
-<script>
-// Force kill old service workers that cache stale files
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(r) { r.unregister(); });
-  });
-  // Re-register fresh after a tick
-  setTimeout(function() {
-    navigator.serviceWorker.register('sw.js?v=2.9');
-  }, 1000);
-}
-</script>
-<script src="app.js?v=2.8"></script>
+<script src="app.js"></script>
 </body>
 </html>
