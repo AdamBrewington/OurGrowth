@@ -765,21 +765,18 @@ var OG = (function() {
   function renderDashPaycheck(){
     autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
     var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
-    var hLeft=householdPeriodLeft();
+    var days=null;
+    if(adamDays!==null&&britDays!==null)days=Math.min(adamDays,britDays);
+    else if(adamDays!==null)days=adamDays;
+    else if(britDays!==null)days=britDays;
     var budgetEl=$('dash-budget-num');
     if(budgetEl){
-      if(hLeft!==null){budgetEl.textContent=(hLeft>=0?'+':'-')+' $'+Math.abs(hLeft).toFixed(0);budgetEl.className='stat-num '+(hLeft>=0?'green':'rose');}
-      else{budgetEl.textContent='—';budgetEl.className='stat-num gold';}
+      if(days===null){budgetEl.textContent='—';budgetEl.className='stat-num gold';}
+      else if(days===0){budgetEl.textContent='Payday! 🎉';budgetEl.className='stat-num green';budgetEl.style.fontSize='1.4rem';}
+      else{budgetEl.textContent=days+'d';budgetEl.className='stat-num gold';budgetEl.style.fontSize='';}
     }
     var labelEl=$('dash-budget-label');
-    if(labelEl){
-      var days=null;
-      if(adamDays!==null&&britDays!==null)days=Math.min(adamDays,britDays);
-      else if(adamDays!==null)days=adamDays;
-      else if(britDays!==null)days=britDays;
-      if(days!==null){var payStr=days===0?'Payday!':days===1?'Payday tomorrow':days+'d to payday';labelEl.textContent='Period Left · '+payStr;}
-      else{labelEl.textContent='Period Left';}
-    }
+    if(labelEl)labelEl.textContent=days===null?'Set up budget':'Until Payday';
   }
 
   // ══════════════════════════════════
