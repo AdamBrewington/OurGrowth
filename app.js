@@ -557,7 +557,7 @@ var OG = (function() {
   // ══════════════════════════════════
   // MONEY TAB (no subs tab)
   // ══════════════════════════════════
-  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['bills','budget','mgoals'].forEach(function(t){$('money-'+t).style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();if(tab==='budget')renderBudgetTab();}
+  function moneyTab(tab,btn){document.querySelectorAll('#page-money .tab-pill').forEach(function(p){p.classList.remove('active');});btn.classList.add('active');['bills','budget','mgoals','subs'].forEach(function(t){var el=$('money-'+t);if(el)el.style.display=t===tab?'block':'none';});if(tab==='mgoals')renderSavingsGoals();if(tab==='budget')renderBudgetTab();if(tab==='subs')renderSubs();}
   function renderSavingsGoals(){var list=$('savings-list');if(!goalsFinancial.length){list.innerHTML='<div class="empty">Add goals in the Goals tab</div>';return;}list.innerHTML=goalsFinancial.map(function(g){var pct=g.target>0?Math.min(100,Math.round(g.current/g.target*100)):0;var unit=g.unit||'$';var fmtC=unit==='$'?('$'+Number(g.current).toLocaleString()):(Number(g.current).toLocaleString()+' '+esc(unit));var fmtT=unit==='$'?('$'+Number(g.target).toLocaleString()):(Number(g.target).toLocaleString()+' '+esc(unit));return'<div class="goal-item"><div class="goal-top"><span class="goal-name">'+esc(g.name)+'</span><span class="goal-pct">'+pct+'%</span></div><div class="goal-bar-track"><div class="goal-bar-fill" style="width:'+pct+'%"></div></div><div class="goal-meta"><span>'+fmtC+' of '+fmtT+'</span></div></div>';}).join('');}
 
   // ══════════════════════════════════
@@ -1023,8 +1023,10 @@ var OG = (function() {
   // ══════════════════════════════════
   function renderAll(){updateDashStats();renderTasks();renderTaskPreview();renderDashToday();renderDashRecap();renderNotes();renderGrocery();renderBills();renderSubs();renderGoalsAll();renderDashGoals();renderPlans();updateNextEvent();renderBudgetTab();renderDashPaycheck();}
 
-  // Keep renderSubs for data compat — just no UI tab
-  function renderSubs(){}
+  // Keep renderSubs for data compat
+  function renderSubs(){var list=$('subs-list');if(!list)return;if(!subs.length){list.innerHTML='<div class="empty">No subscriptions yet</div>';return;}list.innerHTML=subs.map(function(s){return'<div class="bill-item"><div style="flex:1;min-width:0;"><div class="bill-name">'+esc(s.name)+'</div><div class="bill-sub">'+esc(s.owner||'')+'</div></div><div class="bill-amount">$'+Number(s.amount||0).toFixed(0)+'</div><button class="del-btn" onclick="OG.deleteSub(\''+s.id+'\')">×</button></div>';}).join('');}
+  function addSub(){var name=$('sub-name-in').value.trim(),owner=$('sub-owner-in').value.trim(),amt=$('sub-amt-in').value.trim();if(!name)return;subs.push({id:uid('sub'),name:name,owner:owner,amount:parseFloat(amt)||0});logChange('subs','added',name);$('sub-name-in').value='';$('sub-owner-in').value='';$('sub-amt-in').value='';renderSubs();saveAll();}
+  function deleteSub(id){var removed=removeById(subs,id);if(removed)showUndo(removed.name,'subs',removed);renderSubs();saveAll();}
 
   function init(){
     loadAll();
@@ -1037,6 +1039,7 @@ var OG = (function() {
   return {
     navTo:navTo,setOwner:setOwner,filterTasks:filterTasks,addTask:addTask,toggleTask:toggleTask,deleteTask:deleteTask,editTask:editTask,saveTaskEdit:saveTaskEdit,toggleTaskNotes:toggleTaskNotes,saveTaskNote:saveTaskNote,renderTasks:renderTasks,
     addBill:addBill,toggleBillPaid:toggleBillPaid,deleteBill:deleteBill,editBill:editBill,saveBillEdit:saveBillEdit,cancelBillEdit:cancelBillEdit,cycleBillOwner:cycleBillOwner,moneyTab:moneyTab,
+    addSub:addSub,deleteSub:deleteSub,
     addGoal:addGoal,updateGoalLabels:updateGoalLabels,toggleGoalEdit:toggleGoalEdit,saveGoalEdit:saveGoalEdit,cancelGoalEdit:cancelGoalEdit,deleteGoal:deleteGoal,
     notesTab:notesTab,addNote:addNote,saveNoteText:saveNoteText,deleteNote:deleteNote,
     addGrocery:addGrocery,toggleGrocery:toggleGrocery,deleteGrocery:deleteGrocery,toggleGroceryLock:toggleGroceryLock,clearGrocery:clearGrocery,
