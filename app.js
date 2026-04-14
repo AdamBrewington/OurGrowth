@@ -519,16 +519,18 @@ var OG = (function() {
           '</div>'+
         '</div>'
       ):'';
-      return'<div class="bill-item '+urg+'" style="flex-wrap:wrap;">'+
-        '<div style="flex:1;min-width:0;">'+
+      return'<div class="bill-item '+urg+'">'+
+        '<div>'+
           '<div class="bill-name">'+esc(b.name)+(b.recurring?'<span class="bill-recurring-tag">recurring</span>':'')+checkTag+'</div>'+
           '<div class="bill-sub">'+billStatusLabel(b)+'</div>'+
         '</div>'+
         '<div class="bill-amount">$'+Number(b.amount||0).toFixed(0)+'</div>'+
-        '<button class="bill-own-badge '+ownCls+'" onclick="OG.cycleBillOwner(\''+id+'\')" title="Tap to change owner">'+ownLabel+'</button>'+
-        '<button class="bill-status-btn" onclick="OG.toggleBillPaid(\''+id+'\')">'+(b.paid?'Paid':'Mark Paid')+'</button>'+
-        '<button class="edit-btn" onclick="OG.editBill(\''+id+'\')" title="Edit">✏️</button>'+
-        '<button class="del-btn" onclick="OG.deleteBill(\''+id+'\')">×</button>'+
+        '<div class="bill-item-actions">'+
+          '<button class="bill-own-badge '+ownCls+'" onclick="OG.cycleBillOwner(\''+id+'\')" title="Tap to change owner">'+ownLabel+'</button>'+
+          '<button class="bill-status-btn" onclick="OG.toggleBillPaid(\''+id+'\')">'+(b.paid?'Paid':'Mark Paid')+'</button>'+
+          '<button class="edit-btn" onclick="OG.editBill(\''+id+'\')" title="Edit">✏️</button>'+
+          '<button class="del-btn" onclick="OG.deleteBill(\''+id+'\')">×</button>'+
+        '</div>'+
         editForm+
       '</div>';
     }).join('');
@@ -786,6 +788,75 @@ var OG = (function() {
     return check.amount-billTotal-halfLiving;
   }
 
+  // ── NEXT-N UPCOMING CHECKS (forward only, across both people) ──
+  // Returns the next `count` paydays from today, merged across Adam + Brittany,
+  // ordered by date. Each item includes who the check is for and the amount.
+  function getUpcomingChecks(count){
+    if(!count)count=2;
+    autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
+    var today=new Date();today.setHours(0,0,0,0);
+    var out=[];
+    ['adam','brit'].forEach(function(person){
+      var b=budget[person];
+      if(!b||!b.nextPaycheckISO||!b.paycheckAmount)return;
+      var d=new Date(b.nextPaycheckISO);d.setHours(12,0,0,0);
+      // collect up to `count` future paydays for this person
+      for(var i=0;i<count;i++){
+        var dd=new Date(d);
+        if(dd>=today){
+          out.push({
+            person:person,
+            personName:person==='adam'?'Adam':'Brittany',
+            amount:b.paycheckAmount,
+            dateISO:dd.toISOString()
+          });
+        }
+        d.setDate(d.getDate()+14);
+      }
+    });
+    out.sort(function(a,b){return new Date(a.dateISO)-new Date(b.dateISO);});
+    return out.slice(0,count);
+  }
+
+  // Determine which "check number of the month" a paycheck represents,
+  // so user-assigned bills (checkNum 1/2/3) align with the right payday.
+  function getCheckNumForPayday(person,dateISO){
+    if(!dateISO)return 0;
+    var d=new Date(dateISO);
+    var monthChecks=getChecksForMonth(d.getMonth(),d.getFullYear())
+      .filter(function(c){return c.person===person;});
+    for(var i=0;i<monthChecks.length;i++){
+      if(new Date(monthChecks[i].dateISO).toDateString()===d.toDateString()){
+        return i+1;
+      }
+    }
+    return 0;
+  }
+
+  // Bills assigned to a given person+payday, filtered by ownership scope.
+  // scope: 'person' = only bills owned by that person (not 'both')
+  //        'household' = all bills assigned to that check# in that person's month
+  function billsForCheck(person,dateISO,scope){
+    var checkNum=getCheckNumForPayday(person,dateISO);
+    if(!checkNum)return [];
+    var d=new Date(dateISO);
+    var checkMonth=d.getMonth(),checkYear=d.getFullYear();
+    return bills.filter(function(b){
+      if(b.paid)return false;
+      if((b.checkNum||0)!==checkNum)return false;
+      // Bill must belong to the same calendar month as the payday (so Check 2 in
+      // April doesn't pick up Check 2 bills for May).
+      if(b.dueISO){
+        var bd=new Date(b.dueISO);
+        if(bd.getMonth()!==checkMonth||bd.getFullYear()!==checkYear)return false;
+      }
+      var own=b.owner||'both';
+      if(scope==='person')return own===person;
+      if(scope==='household')return true;
+      return false;
+    });
+  }
+
   function periodLeft(person){
     var b=budget[person];if(!b||!b.paycheckAmount)return null;
     autoAdvancePaycheck(person);
@@ -833,33 +904,15 @@ var OG = (function() {
     budgetSaveTimer=setTimeout(function(){saveAll();},700);
   }
 
-  // Live-update only the derived numbers on the Budget tab without rebuilding
-  // inputs (which would steal focus and dismiss the mobile keyboard).
+  // Live-update Budget tab derived numbers without rebuilding inputs (which
+  // would steal focus and dismiss the mobile keyboard during typing).
+  // The inputs live in the Setup card; the check cards live below. We only
+  // rebuild the check cards area on each keystroke.
   function updateBudgetNumbers(){
     var el=$('money-budget');if(!el)return;
-    if(!el.querySelector('[data-monthly-surplus]')){renderBudgetTab();return;}
-    var mb=getMonthlyBudget();
-    var setText=function(sel,txt){var n=el.querySelector(sel);if(n)n.textContent=txt;};
-    var setColor=function(sel,color){var n=el.querySelector(sel);if(n)n.style.color=color;};
-    var fmt=function(v){return(v>=0?'+ $':'− $')+Math.abs(v).toFixed(0);};
-    // Monthly summary
-    setText('[data-monthly-surplus]',fmt(mb.surplus));
-    setColor('[data-monthly-surplus]',mb.surplus>=0?'var(--green)':'var(--rose)');
-    setText('[data-monthly-income]','$'+mb.totalIncome.toFixed(0));
-    setText('[data-monthly-bills]','−$'+mb.totalBills.toFixed(0));
-    setText('[data-monthly-living]','−$'+mb.monthlyLiving.toFixed(0));
-    // Per-check surplus
-    for(var i=1;i<=3;i++){
-      var s=checkSurplus(i,mb);
-      if(s!==null){
-        setText('[data-check-surplus="'+i+'"]',fmt(s));
-        setColor('[data-check-surplus="'+i+'"]',s>=0?'var(--green)':'var(--rose)');
-      }
-    }
-    // Per-person (Adam/Brittany) surplus
-    var adamLeft=periodLeft('adam');var britLeft=periodLeft('brit');
-    if(adamLeft!==null){setText('[data-person-surplus="adam"]',fmt(adamLeft));setColor('[data-person-surplus="adam"]',adamLeft>=0?'var(--green)':'var(--rose)');}
-    if(britLeft!==null){setText('[data-person-surplus="brit"]',fmt(britLeft));setColor('[data-person-surplus="brit"]',britLeft>=0?'var(--green)':'var(--rose)');}
+    var anchor=el.querySelector('#budget-derived');
+    if(!anchor){renderBudgetTab();return;}
+    anchor.innerHTML=buildBudgetDerivedHTML();
   }
 
   function renderBudgetTab(){
@@ -896,109 +949,151 @@ var OG = (function() {
 
     var countdownCard=daysLabel?'<div class="budget-countdown"><div class="bcd-days">'+daysLabel+'</div><div class="bcd-label">until next payday</div></div>':'';
 
-    // ── Monthly Household card ──
-    var monthlyCard='';
-    if(mb.checks.length>0){
-      var surplus=mb.surplus;
-      var color=surplus>=0?'var(--green)':'var(--rose)';
-      var threeCheckNote=mb.checks.length===3?'<div style="font-size:0.68rem;color:var(--accent);margin-top:4px;font-weight:500;">✨ This is a 3-paycheck month</div>':'';
-      var overflowWarning='';
-      if(mb.overflowBills.length>0){
-        overflowWarning='<div style="margin-top:10px;padding:8px 10px;background:var(--rose-soft);border-radius:8px;font-size:0.74rem;color:var(--rose);">'+
-          '⚠ '+mb.overflowBills.length+' bill'+(mb.overflowBills.length>1?'s':'')+' assigned to a check that doesn\'t exist this month: '+
-          mb.overflowBills.map(function(b){return esc(b.name);}).join(', ')+
-        '</div>';
-      }
-      monthlyCard='<div class="section-title">'+esc(mb.monthName)+'</div>'+
-        '<div class="card" style="margin-bottom:10px;">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
-            '<div class="card-label" style="margin:0;">Monthly Household</div>'+
-            '<div data-monthly-surplus data-budget-numbers style="font-family:\'Cormorant Garamond\',serif;font-size:1.9rem;font-weight:300;color:'+color+';">'+(surplus>=0?'+ $':'− $')+Math.abs(surplus).toFixed(0)+'</div>'+
-          '</div>'+
-          threeCheckNote+
-          '<div class="budget-line-row" style="margin-top:8px;"><span>Total income ('+mb.checks.length+' checks)</span><span data-monthly-income>$'+mb.totalIncome.toFixed(0)+'</span></div>'+
-          (mb.totalBills>0?'<div class="budget-line-row"><span>All bills</span><span data-monthly-bills style="color:var(--rose);">−$'+mb.totalBills.toFixed(0)+'</span></div>':'')+
-          (mb.monthlyLiving>0?'<div class="budget-line-row"><span>Living costs ('+mb.checks.length+'×)</span><span data-monthly-living style="color:var(--text-muted);">−$'+mb.monthlyLiving.toFixed(0)+'</span></div>':'')+
-          overflowWarning+
-        '</div>';
-    }
+    el.innerHTML=setupCard+'<div id="budget-derived">'+buildBudgetDerivedHTML()+'</div>';
+  }
 
-    // ── Numbered Check cards ──
+  // Build everything below the Setup card: countdown, unassigned warning,
+  // and upcoming check cards. Separated so we can re-render it on keystrokes
+  // without disturbing the focused <input> in the Setup card above.
+  function buildBudgetDerivedHTML(){
+    autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
+    var adamDays=daysUntilPaycheck('adam');var britDays=daysUntilPaycheck('brit');
+    var nextDays=null;
+    if(adamDays!==null&&britDays!==null)nextDays=Math.min(adamDays,britDays);
+    else if(adamDays!==null)nextDays=adamDays;
+    else if(britDays!==null)nextDays=britDays;
+    var daysLabel=nextDays===null?'':nextDays===0?'Payday! 🎉':nextDays===1?'Tomorrow':nextDays+' days';
+    var countdownCard=daysLabel?'<div class="budget-countdown"><div class="bcd-days">'+daysLabel+'</div><div class="bcd-label">until next payday</div></div>':'';
+
+    // ── Upcoming checks: next 2 paydays, regardless of month ──
+    var upcoming=getUpcomingChecks(2);
     var checkCardsHTML='';
-    if(mb.checks.length>0){
-      checkCardsHTML='<div class="section-title">This Month\'s Checks</div>';
-      mb.checks.forEach(function(check){
-        var n=check.number;
-        var surplus=checkSurplus(n,mb);
-        var color=surplus>=0?'var(--green)':'var(--rose)';
-        var assignedBills=mb.billsByCheck[n]||[];
-        var billTotal=assignedBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
-        var halfLiving=(mb.livingCosts||0)/2;
-        var pct=check.amount>0?Math.min(100,Math.max(0,Math.round(surplus/check.amount*100))):0;
-        var dateStr=new Date(check.dateISO).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-        var billList=assignedBills.length?'<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">'+
-          assignedBills.map(function(b){
-            var due=b.dueISO?daysDiff(b.dueISO):null;
-            var checkDay=daysDiff(check.dateISO);
-            var warn=(due!==null&&due<checkDay)?' <span style="color:var(--rose);font-size:0.62rem;">⚠ due before check</span>':'';
-            return'<div class="budget-timing-item"><span>'+esc(b.name)+warn+'</span><span>−$'+Number(b.amount||0).toFixed(0)+'</span></div>';
-          }).join('')+
-        '</div>':'';
-        checkCardsHTML+='<div class="card" style="margin-bottom:10px;">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
-            '<div><div class="card-label" style="margin:0;">Check '+n+' · '+esc(check.personName)+'</div>'+
-              '<div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">'+dateStr+'</div>'+
+    var unassignedWarning='';
+
+    if(upcoming.length>0){
+      checkCardsHTML='<div class="section-title">Upcoming Paychecks</div>';
+
+      upcoming.forEach(function(chk){
+        var dateStr=new Date(chk.dateISO).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        var ownerName=chk.personName;
+        var ownerKey=chk.person;
+        var checkNum=getCheckNumForPayday(ownerKey,chk.dateISO);
+        var titleNum=checkNum>0?'Check '+checkNum:'Check';
+
+        var personBills=billsForCheck(ownerKey,chk.dateISO,'person');
+        var personBillsTotal=personBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+        var personHalfLiving=(budget.livingCosts||0)/2;
+        var personRemainder=chk.amount-personBillsTotal-personHalfLiving;
+
+        var partnerKey=ownerKey==='adam'?'brit':'adam';
+        var partnerName=partnerKey==='adam'?'Adam':'Brittany';
+        var partnerSharesDay=upcoming.some(function(c){
+          return c.person===partnerKey && new Date(c.dateISO).toDateString()===new Date(chk.dateISO).toDateString();
+        });
+
+        var householdBills=billsForCheck(ownerKey,chk.dateISO,'household');
+        var householdBillsTotal=householdBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+        var householdIncome=chk.amount;
+        if(partnerSharesDay){householdIncome+=budget[partnerKey].paycheckAmount||0;}
+        var householdLiving=budget.livingCosts||0;
+        var householdRemainder=partnerSharesDay
+          ? householdIncome-householdBillsTotal-householdLiving
+          : householdIncome-householdBillsTotal-personHalfLiving;
+
+        var personSection=buildCheckSection({
+          label:ownerName+"'s Check",
+          labelClass:ownerKey==='adam'?'adam':'brit',
+          income:chk.amount,incomeLabel:'Paycheck',
+          bills:personBills,billsTotal:personBillsTotal,
+          livingLabel:'Living (½)',livingAmount:personHalfLiving,
+          remainder:personRemainder,
+          emptyNote:personBills.length?'':'No personal bills on this check'
+        });
+
+        var partnerSection='';
+        if(partnerSharesDay){
+          var partnerBills=billsForCheck(partnerKey,chk.dateISO,'person');
+          var partnerBillsTotal=partnerBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+          var partnerCheckAmt=budget[partnerKey].paycheckAmount||0;
+          var partnerRemainder=partnerCheckAmt-partnerBillsTotal-personHalfLiving;
+          partnerSection=buildCheckSection({
+            label:partnerName+"'s Check",
+            labelClass:partnerKey==='adam'?'adam':'brit',
+            income:partnerCheckAmt,incomeLabel:'Paycheck',
+            bills:partnerBills,billsTotal:partnerBillsTotal,
+            livingLabel:'Living (½)',livingAmount:personHalfLiving,
+            remainder:partnerRemainder,
+            emptyNote:partnerBills.length?'':'No personal bills on this check'
+          });
+        }
+
+        var householdSection=buildCheckSection({
+          label:'Household',
+          labelClass:'house',
+          income:householdIncome,
+          incomeLabel:partnerSharesDay?'Combined income':'Paycheck',
+          bills:householdBills,billsTotal:householdBillsTotal,
+          livingLabel:partnerSharesDay?'Living (full)':'Living (½)',
+          livingAmount:partnerSharesDay?householdLiving:personHalfLiving,
+          remainder:householdRemainder,
+          emptyNote:householdBills.length?'':'No bills assigned to this check',
+          isHousehold:true
+        });
+
+        checkCardsHTML+='<div class="check-card">'+
+          '<div class="check-head">'+
+            '<div>'+
+              '<div class="check-head-title">'+titleNum+' · <em>'+esc(ownerName)+'</em></div>'+
+              '<div class="check-head-date">'+dateStr+'</div>'+
             '</div>'+
-            '<div data-check-surplus="'+n+'" data-budget-numbers style="font-family:\'Cormorant Garamond\',serif;font-size:1.5rem;font-weight:300;color:'+color+';">'+(surplus>=0?'+ $':'− $')+Math.abs(surplus).toFixed(0)+'</div>'+
+            '<div class="check-head-right">'+
+              '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.5rem;color:var(--accent);">$'+chk.amount.toFixed(0)+'</div>'+
+            '</div>'+
           '</div>'+
-          '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+pct+'%;background:'+(surplus>=0?'var(--green)':'var(--rose)')+'"></div></div>'+
-          '<div class="budget-line-row"><span>Paycheck</span><span>$'+check.amount.toFixed(0)+'</span></div>'+
-          (billTotal>0?'<div class="budget-line-row"><span>Assigned bills</span><span style="color:var(--rose);">−$'+billTotal.toFixed(0)+'</span></div>':'')+
-          (halfLiving>0?'<div class="budget-line-row"><span>Living (½)</span><span style="color:var(--text-muted);">−$'+halfLiving.toFixed(0)+'</span></div>':'')+
-          billList+
+          personSection+partnerSection+householdSection+
         '</div>';
       });
-      // Unassigned bills summary
-      if(mb.unassignedBills.length>0){
-        var unTotal=mb.unassignedBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
-        checkCardsHTML+='<div class="card" style="margin-bottom:10px;border-color:var(--accent);">'+
+
+      var unassigned=bills.filter(function(b){return!b.paid && !(b.checkNum||0);});
+      if(unassigned.length>0){
+        var unTotal=unassigned.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+        unassignedWarning='<div class="card" style="border-color:var(--accent);margin-bottom:10px;">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
             '<div class="card-label" style="margin:0;color:var(--accent);">Unassigned Bills</div>'+
             '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;color:var(--accent);">$'+unTotal.toFixed(0)+'</div>'+
           '</div>'+
-          '<div style="font-size:0.74rem;color:var(--text-muted);">Assign these to a check so they\'re counted in your per-check budget.</div>'+
-          '<div style="margin-top:8px;">'+mb.unassignedBills.map(function(b){return'<div class="budget-timing-item"><span>'+esc(b.name)+'</span><span>$'+Number(b.amount||0).toFixed(0)+'</span></div>';}).join('')+'</div>'+
+          '<div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:8px;">Tap a bill on the Bills tab → assign to a check so it shows up in your budget.</div>'+
+          unassigned.map(function(b){return'<div class="budget-timing-item"><span>'+esc(b.name)+'</span><span>$'+Number(b.amount||0).toFixed(0)+'</span></div>';}).join('')+
         '</div>';
       }
     }
 
-    // ── Per-person cards (kept from original) ──
-    var adamLeft=periodLeft('adam');var britLeft=periodLeft('brit');
-    function personCard(label,person,leftVal,days){
-      var b=budget[person]||{};if(!b.paycheckAmount)return'';
-      var deductions=billsDueThisPeriod(person,b.nextPaycheckISO);
-      var halfLiving=(budget.livingCosts||0)/2;
-      var color=leftVal>=0?'var(--green)':'var(--rose)';
-      var pct=b.paycheckAmount>0?Math.min(100,Math.max(0,Math.round((b.paycheckAmount-(deductions+halfLiving))/b.paycheckAmount*100))):0;
-      return'<div class="card" style="margin-bottom:10px;">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
-          '<div class="card-label" style="margin:0;">'+label+'</div>'+
-          '<div data-person-surplus="'+person+'" data-budget-numbers style="font-family:\'Cormorant Garamond\',serif;font-size:1.5rem;font-weight:300;color:'+color+';">'+(leftVal>=0?'+ $':'− $')+Math.abs(leftVal).toFixed(0)+'</div>'+
-        '</div>'+
-        '<div class="budget-bar-wrap"><div class="budget-bar-fill" style="width:'+pct+'%;background:'+(leftVal>=0?'var(--green)':'var(--rose)')+'"></div></div>'+
-        '<div class="budget-line-row"><span>This check</span><span>$'+Number(b.paycheckAmount).toFixed(0)+'</span></div>'+
-        (deductions>0?'<div class="budget-line-row"><span>Bills this period</span><span style="color:var(--rose);">−$'+deductions.toFixed(0)+'</span></div>':'')+
-        (halfLiving>0?'<div class="budget-line-row"><span>Living (½)</span><span style="color:var(--text-muted);">−$'+halfLiving.toFixed(0)+'</span></div>':'')+
-      '</div>';
-    }
-    var personCards='';
-    if(adamLeft!==null||britLeft!==null){
-      personCards='<div class="section-title">Next Paycheck · By Person</div>'+
-        (adamLeft!==null?personCard('Adam\'s Check','adam',adamLeft,adamDays):'')+
-        (britLeft!==null?personCard('Brittany\'s Check','brit',britLeft,britDays):'');
-    }
+    return countdownCard+unassignedWarning+checkCardsHTML;
+  }
 
-    el.innerHTML=setupCard+countdownCard+monthlyCard+checkCardsHTML+personCards;
+  // Build one section of a check card (person or household)
+  function buildCheckSection(opts){
+    var rem=opts.remainder;
+    var remCls=rem>=0?'pos':'neg';
+    var remStr=(rem>=0?'+ $':'− $')+Math.abs(rem).toFixed(0);
+    var billsHTML='';
+    if(opts.bills && opts.bills.length){
+      billsHTML=opts.bills.map(function(b){
+        return '<div class="check-bill-line"><span>'+esc(b.name)+'</span><span>−$'+Number(b.amount||0).toFixed(0)+'</span></div>';
+      }).join('');
+    } else if(opts.emptyNote){
+      billsHTML='<div class="check-empty-note">'+esc(opts.emptyNote)+'</div>';
+    }
+    return '<div class="check-section'+(opts.isHousehold?' household':'')+'">'+
+      '<div class="check-section-head">'+
+        '<div class="check-section-label '+(opts.labelClass||'')+'">'+esc(opts.label)+'</div>'+
+        '<div class="check-remainder '+remCls+'">'+remStr+'</div>'+
+      '</div>'+
+      '<div class="check-math-row"><span>'+esc(opts.incomeLabel||'Income')+'</span><span>$'+Number(opts.income||0).toFixed(0)+'</span></div>'+
+      (opts.billsTotal>0?'<div class="check-math-row"><span>Assigned bills</span><span class="val-neg">−$'+opts.billsTotal.toFixed(0)+'</span></div>':'')+
+      (opts.livingAmount>0?'<div class="check-math-row"><span>'+esc(opts.livingLabel||'Living')+'</span><span class="val-mute">−$'+opts.livingAmount.toFixed(0)+'</span></div>':'')+
+      billsHTML+
+    '</div>';
   }
 
   function renderDashPaycheck(){

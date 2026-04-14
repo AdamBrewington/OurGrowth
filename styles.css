@@ -230,10 +230,19 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .owner-pill.sel-both{background:rgba(128,128,128,0.08);border-color:var(--border-strong);color:var(--text);font-weight:500}
 
 /* ═══ BILLS ═══ */
-.bill-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px}
+.bill-item{display:grid;grid-template-columns:1fr auto;grid-template-areas:"info amount" "actions actions";column-gap:10px;row-gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
 .bill-item:last-child{border-bottom:none}
-.bill-name{font-size:0.88rem}.bill-sub{font-size:0.67rem;color:var(--text-muted);margin-top:2px}
-.bill-amount{font-family:'Cormorant Garamond',serif;font-size:1.25rem;flex-shrink:0}
+.bill-item > div:first-child{grid-area:info;min-width:0}
+.bill-item .bill-amount{grid-area:amount}
+.bill-item .bill-own-badge,
+.bill-item .bill-status-btn,
+.bill-item .edit-btn,
+.bill-item .del-btn{grid-area:actions;align-self:center}
+.bill-item .bill-own-badge{justify-self:start}
+.bill-item-actions{grid-area:actions;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bill-name{font-size:0.88rem;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.bill-sub{font-size:0.67rem;color:var(--text-muted);margin-top:2px}
+.bill-amount{font-family:'Cormorant Garamond',serif;font-size:1.25rem;flex-shrink:0;text-align:right}
 .bill-item.bill-good .bill-status-btn{background:var(--green-soft);border-color:var(--green);color:var(--green)}
 .bill-item.bill-good .bill-amount{color:var(--green)}
 .bill-item.bill-approaching .bill-status-btn{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
@@ -413,6 +422,7 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   animation: fadeUp 0.2s ease;
+  grid-column: 1 / -1;
 }
 .bill-edit-row {
   display: flex;
@@ -423,3 +433,93 @@ select.add-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://w
 .bill-edit-row:last-child {
   margin-bottom: 0;
 }
+
+/* ═══ v2.7 BILL OWNER BADGE + BUDGET TAB ═══ */
+.bill-own-badge{
+  font-size:0.62rem;letter-spacing:0.04em;text-transform:uppercase;
+  padding:3px 9px;border-radius:8px;border:1px solid var(--border-strong);
+  background:var(--surface);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-weight:600;transition:all 0.15s;flex-shrink:0
+}
+.bill-own-badge.bill-own-adam{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.bill-own-badge.bill-own-brit{background:var(--rose-soft);border-color:var(--rose);color:var(--rose)}
+.bill-own-badge.bill-own-both{background:rgba(128,128,128,0.08);color:var(--text)}
+.bill-own-badge:active{transform:scale(0.94)}
+
+/* Shared budget-line row (label/value pair) */
+.budget-line-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.82rem;padding:3px 0;color:var(--text)
+}
+.budget-line-row span:first-child{color:var(--text-muted)}
+.budget-timing-item{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.76rem;padding:4px 0;color:var(--text-muted);gap:8px
+}
+.budget-timing-item span:first-child{flex:1;min-width:0}
+
+/* Progress bar used in check cards */
+.budget-bar-wrap{height:4px;background:rgba(128,128,128,0.12);border-radius:3px;overflow:hidden;margin:6px 0 10px}
+.budget-bar-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+
+/* Payday countdown banner */
+.budget-countdown{
+  background:var(--accent-soft);border:1px solid var(--accent);
+  border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;
+  display:flex;align-items:baseline;gap:10px
+}
+.bcd-days{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;color:var(--accent);line-height:1}
+.bcd-label{font-size:0.7rem;color:var(--text-muted);letter-spacing:0.05em}
+
+/* Per-check card: three-section layout (Adam / Brittany / Household) */
+.check-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:0;margin-bottom:14px;overflow:hidden;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 1px 8px rgba(0,0,0,0.04)
+}
+.check-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;background:var(--accent-dim);
+  border-bottom:1px solid var(--border)
+}
+.check-head-title{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--text)}
+.check-head-title em{font-style:italic;color:var(--accent)}
+.check-head-date{font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-top:2px}
+.check-head-right{text-align:right}
+.check-section{padding:12px 16px;border-bottom:1px solid var(--border)}
+.check-section:last-child{border-bottom:none}
+.check-section.household{background:rgba(128,128,128,0.035)}
+.check-section-head{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px
+}
+.check-section-label{
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text-muted);font-weight:600
+}
+.check-section-label.adam{color:var(--accent)}
+.check-section-label.brit{color:var(--rose)}
+.check-section-label.house{color:var(--text)}
+.check-remainder{
+  font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;line-height:1
+}
+.check-remainder.pos{color:var(--green)}
+.check-remainder.neg{color:var(--rose)}
+.check-bill-line{
+  display:flex;justify-content:space-between;font-size:0.76rem;
+  padding:3px 0;color:var(--text-muted);gap:8px
+}
+.check-bill-line span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.check-math-row{
+  display:flex;justify-content:space-between;font-size:0.8rem;
+  padding:3px 0
+}
+.check-math-row.sum{
+  margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
+  font-weight:500
+}
+.check-math-row span:first-child{color:var(--text-muted)}
+.check-math-row .val-pos{color:var(--green)}
+.check-math-row .val-neg{color:var(--rose)}
+.check-math-row .val-mute{color:var(--text-muted)}
+.check-empty-note{font-size:0.72rem;color:var(--text-dim);font-style:italic;padding:4px 0}
