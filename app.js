@@ -788,34 +788,49 @@ var OG = (function() {
     return check.amount-billTotal-halfLiving;
   }
 
-  // ── NEXT-N UPCOMING CHECKS (forward only, across both people) ──
-  // Returns the next `count` paydays from today, merged across Adam + Brittany,
-  // ordered by date. Each item includes who the check is for and the amount.
+  // ── NEXT-N UPCOMING PAYDAYS (one entry per payday, not per person) ──
+  // Returns the next `count` distinct paydays from today. Each entry has
+  // both people's check amounts if they share the day, or just one person's.
   function getUpcomingChecks(count){
     if(!count)count=2;
     autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
     var today=new Date();today.setHours(0,0,0,0);
-    var out=[];
+    // Collect individual paydays first
+    var raw=[];
     ['adam','brit'].forEach(function(person){
       var b=budget[person];
       if(!b||!b.nextPaycheckISO||!b.paycheckAmount)return;
       var d=new Date(b.nextPaycheckISO);d.setHours(12,0,0,0);
-      // collect up to `count` future paydays for this person
-      for(var i=0;i<count;i++){
+      for(var i=0;i<count+2;i++){// look a bit ahead in case of merging
         var dd=new Date(d);
         if(dd>=today){
-          out.push({
-            person:person,
-            personName:person==='adam'?'Adam':'Brittany',
-            amount:b.paycheckAmount,
-            dateISO:dd.toISOString()
-          });
+          raw.push({person:person,amount:b.paycheckAmount,dateISO:dd.toISOString(),dayKey:dd.toDateString()});
         }
         d.setDate(d.getDate()+14);
       }
     });
-    out.sort(function(a,b){return new Date(a.dateISO)-new Date(b.dateISO);});
-    return out.slice(0,count);
+    // Merge by day
+    var byDay={};var order=[];
+    raw.forEach(function(r){
+      if(!byDay[r.dayKey]){
+        byDay[r.dayKey]={dateISO:r.dateISO,dayKey:r.dayKey,adamAmount:0,britAmount:0,people:[]};
+        order.push(r.dayKey);
+      }
+      var slot=byDay[r.dayKey];
+      if(r.person==='adam'){slot.adamAmount=r.amount;}
+      else{slot.britAmount=r.amount;}
+      if(slot.people.indexOf(r.person)===-1)slot.people.push(r.person);
+    });
+    // Order by date, take next `count`
+    var paydays=order.map(function(k){return byDay[k];})
+      .sort(function(a,b){return new Date(a.dateISO)-new Date(b.dateISO);})
+      .slice(0,count);
+    // Assign a "check number within month" for each person on each payday
+    paydays.forEach(function(p){
+      p.adamCheckNum=p.adamAmount?getCheckNumForPayday('adam',p.dateISO):0;
+      p.britCheckNum=p.britAmount?getCheckNumForPayday('brit',p.dateISO):0;
+    });
+    return paydays;
   }
 
   // Determine which "check number of the month" a paycheck represents,
@@ -833,24 +848,44 @@ var OG = (function() {
     return 0;
   }
 
-  // Bills assigned to a given person+payday, filtered by ownership scope.
-  // scope: 'person' = only bills owned by that person (not 'both')
-  //        'household' = all bills assigned to that check# in that person's month
+  // Bills assigned to a given payday for a given person, by ownership scope.
+  // Rule: a bill tagged Check N belongs to the NEXT upcoming Check N payday
+  // (for the relevant person). This makes Rent (May 2, Check 2) show up on
+  // the Apr 22 card if that's the next Check 2 payday — because in practice
+  // you pay rent ahead of time from that check.
+  //
+  // person: 'adam' | 'brit' — which person's Check N sequence to consult
+  // dateISO: the candidate payday
+  // scope: 'person' = bills owned by `person` only (not 'both')
+  //        'household' = all unpaid bills (any owner)
   function billsForCheck(person,dateISO,scope){
-    var checkNum=getCheckNumForPayday(person,dateISO);
-    if(!checkNum)return [];
-    var d=new Date(dateISO);
-    var checkMonth=d.getMonth(),checkYear=d.getFullYear();
-    return bills.filter(function(b){
-      if(b.paid)return false;
-      if((b.checkNum||0)!==checkNum)return false;
-      // Bill must belong to the same calendar month as the payday (so Check 2 in
-      // April doesn't pick up Check 2 bills for May).
-      if(b.dueISO){
-        var bd=new Date(b.dueISO);
-        if(bd.getMonth()!==checkMonth||bd.getFullYear()!==checkYear)return false;
+    var thisCheckNum=getCheckNumForPayday(person,dateISO);
+    if(!thisCheckNum)return [];
+    var thisDate=new Date(dateISO);thisDate.setHours(0,0,0,0);
+    var today=new Date();today.setHours(0,0,0,0);
+
+    // Is this payday the EARLIEST remaining payday with this check# for this person?
+    // If not, this payday should not "claim" any bills tagged for this check#.
+    // Walk that person's paycheck sequence from their nextPaycheckISO forward.
+    var b=budget[person];
+    if(!b||!b.nextPaycheckISO||!b.paycheckAmount)return [];
+    var d=new Date(b.nextPaycheckISO);d.setHours(12,0,0,0);
+    var earliestMatchISO=null;
+    for(var i=0;i<8;i++){// look ~16 weeks ahead — plenty
+      if(d>=today){
+        var n=getCheckNumForPayday(person,d.toISOString());
+        if(n===thisCheckNum){earliestMatchISO=d.toISOString();break;}
       }
-      var own=b.owner||'both';
+      d.setDate(d.getDate()+14);
+    }
+    if(!earliestMatchISO)return [];
+    var earliest=new Date(earliestMatchISO);earliest.setHours(0,0,0,0);
+    if(earliest.getTime()!==thisDate.getTime())return []; // not the earliest Check N — don't claim
+
+    return bills.filter(function(bill){
+      if(bill.paid)return false;
+      if((bill.checkNum||0)!==thisCheckNum)return false;
+      var own=bill.owner||'both';
       if(scope==='person')return own===person;
       if(scope==='household')return true;
       return false;
@@ -953,7 +988,7 @@ var OG = (function() {
   }
 
   // Build everything below the Setup card: countdown, unassigned warning,
-  // and upcoming check cards. Separated so we can re-render it on keystrokes
+  // and upcoming payday cards. Separated so we can re-render it on keystrokes
   // without disturbing the focused <input> in the Setup card above.
   function buildBudgetDerivedHTML(){
     autoAdvancePaycheck('adam');autoAdvancePaycheck('brit');
@@ -965,77 +1000,83 @@ var OG = (function() {
     var daysLabel=nextDays===null?'':nextDays===0?'Payday! 🎉':nextDays===1?'Tomorrow':nextDays+' days';
     var countdownCard=daysLabel?'<div class="budget-countdown"><div class="bcd-days">'+daysLabel+'</div><div class="bcd-label">until next payday</div></div>':'';
 
-    // ── Upcoming checks: next 2 paydays, regardless of month ──
+    // ── Upcoming paydays: next 2 paydays (merged across both people) ──
     var upcoming=getUpcomingChecks(2);
     var checkCardsHTML='';
     var unassignedWarning='';
+    var halfLiving=(budget.livingCosts||0)/2;
+    var fullLiving=budget.livingCosts||0;
 
     if(upcoming.length>0){
       checkCardsHTML='<div class="section-title">Upcoming Paychecks</div>';
 
-      upcoming.forEach(function(chk){
-        var dateStr=new Date(chk.dateISO).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-        var ownerName=chk.personName;
-        var ownerKey=chk.person;
-        var checkNum=getCheckNumForPayday(ownerKey,chk.dateISO);
-        var titleNum=checkNum>0?'Check '+checkNum:'Check';
+      upcoming.forEach(function(pd){
+        var dateStr=new Date(pd.dateISO).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        var adamPaid=pd.adamAmount>0;
+        var britPaid=pd.britAmount>0;
 
-        var personBills=billsForCheck(ownerKey,chk.dateISO,'person');
-        var personBillsTotal=personBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
-        var personHalfLiving=(budget.livingCosts||0)/2;
-        var personRemainder=chk.amount-personBillsTotal-personHalfLiving;
+        // Title: use the shared check# if both; else whichever person
+        var titleBits=[];
+        if(adamPaid)titleBits.push('Check '+pd.adamCheckNum+' · <em>Adam</em>');
+        if(britPaid)titleBits.push('Check '+pd.britCheckNum+' · <em>Brittany</em>');
+        var titleHTML;
+        if(adamPaid&&britPaid&&pd.adamCheckNum===pd.britCheckNum){
+          titleHTML='Check '+pd.adamCheckNum+' · <em>Adam &amp; Brittany</em>';
+        } else {
+          titleHTML=titleBits.join(' &middot; ');
+        }
 
-        var partnerKey=ownerKey==='adam'?'brit':'adam';
-        var partnerName=partnerKey==='adam'?'Adam':'Brittany';
-        var partnerSharesDay=upcoming.some(function(c){
-          return c.person===partnerKey && new Date(c.dateISO).toDateString()===new Date(chk.dateISO).toDateString();
-        });
+        var totalIncome=(pd.adamAmount||0)+(pd.britAmount||0);
 
-        var householdBills=billsForCheck(ownerKey,chk.dateISO,'household');
-        var householdBillsTotal=householdBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
-        var householdIncome=chk.amount;
-        if(partnerSharesDay){householdIncome+=budget[partnerKey].paycheckAmount||0;}
-        var householdLiving=budget.livingCosts||0;
-        var householdRemainder=partnerSharesDay
-          ? householdIncome-householdBillsTotal-householdLiving
-          : householdIncome-householdBillsTotal-personHalfLiving;
-
-        var personSection=buildCheckSection({
-          label:ownerName+"'s Check",
-          labelClass:ownerKey==='adam'?'adam':'brit',
-          income:chk.amount,incomeLabel:'Paycheck',
-          bills:personBills,billsTotal:personBillsTotal,
-          livingLabel:'Living (½)',livingAmount:personHalfLiving,
-          remainder:personRemainder,
-          emptyNote:personBills.length?'':'No personal bills on this check'
-        });
-
-        var partnerSection='';
-        if(partnerSharesDay){
-          var partnerBills=billsForCheck(partnerKey,chk.dateISO,'person');
-          var partnerBillsTotal=partnerBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
-          var partnerCheckAmt=budget[partnerKey].paycheckAmount||0;
-          var partnerRemainder=partnerCheckAmt-partnerBillsTotal-personHalfLiving;
-          partnerSection=buildCheckSection({
-            label:partnerName+"'s Check",
-            labelClass:partnerKey==='adam'?'adam':'brit',
-            income:partnerCheckAmt,incomeLabel:'Paycheck',
-            bills:partnerBills,billsTotal:partnerBillsTotal,
-            livingLabel:'Living (½)',livingAmount:personHalfLiving,
-            remainder:partnerRemainder,
-            emptyNote:partnerBills.length?'':'No personal bills on this check'
+        // Adam's section
+        var adamSection='';
+        if(adamPaid){
+          var adamBills=billsForCheck('adam',pd.dateISO,'person');
+          var adamBillsTotal=adamBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+          var adamRem=pd.adamAmount-adamBillsTotal-halfLiving;
+          adamSection=buildCheckSection({
+            label:"Adam's Check",labelClass:'adam',
+            income:pd.adamAmount,incomeLabel:'Paycheck',
+            bills:adamBills,billsTotal:adamBillsTotal,
+            livingLabel:'Living (½)',livingAmount:halfLiving,
+            remainder:adamRem,
+            emptyNote:adamBills.length?'':'No personal bills on this check'
           });
         }
 
+        // Brittany's section
+        var britSection='';
+        if(britPaid){
+          var britBills=billsForCheck('brit',pd.dateISO,'person');
+          var britBillsTotal=britBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+          var britRem=pd.britAmount-britBillsTotal-halfLiving;
+          britSection=buildCheckSection({
+            label:"Brittany's Check",labelClass:'brit',
+            income:pd.britAmount,incomeLabel:'Paycheck',
+            bills:britBills,billsTotal:britBillsTotal,
+            livingLabel:'Living (½)',livingAmount:halfLiving,
+            remainder:britRem,
+            emptyNote:britBills.length?'':'No personal bills on this check'
+          });
+        }
+
+        // Household section — pull bills from whichever person's Check N this is.
+        // If both are paid today, use Adam as the query anchor (both anchors yield
+        // the same bill set since they share the payday and checkNum).
+        var householdBills=[];
+        if(adamPaid)householdBills=billsForCheck('adam',pd.dateISO,'household');
+        else if(britPaid)householdBills=billsForCheck('brit',pd.dateISO,'household');
+        var householdBillsTotal=householdBills.reduce(function(s,b){return s+parseFloat(b.amount||0);},0);
+        var householdLivingAmt=(adamPaid&&britPaid)?fullLiving:halfLiving;
+        var householdRem=totalIncome-householdBillsTotal-householdLivingAmt;
         var householdSection=buildCheckSection({
-          label:'Household',
-          labelClass:'house',
-          income:householdIncome,
-          incomeLabel:partnerSharesDay?'Combined income':'Paycheck',
+          label:'Household',labelClass:'house',
+          income:totalIncome,
+          incomeLabel:(adamPaid&&britPaid)?'Combined income':'Paycheck',
           bills:householdBills,billsTotal:householdBillsTotal,
-          livingLabel:partnerSharesDay?'Living (full)':'Living (½)',
-          livingAmount:partnerSharesDay?householdLiving:personHalfLiving,
-          remainder:householdRemainder,
+          livingLabel:(adamPaid&&britPaid)?'Living (full)':'Living (½)',
+          livingAmount:householdLivingAmt,
+          remainder:householdRem,
           emptyNote:householdBills.length?'':'No bills assigned to this check',
           isHousehold:true
         });
@@ -1043,14 +1084,14 @@ var OG = (function() {
         checkCardsHTML+='<div class="check-card">'+
           '<div class="check-head">'+
             '<div>'+
-              '<div class="check-head-title">'+titleNum+' · <em>'+esc(ownerName)+'</em></div>'+
+              '<div class="check-head-title">'+titleHTML+'</div>'+
               '<div class="check-head-date">'+dateStr+'</div>'+
             '</div>'+
             '<div class="check-head-right">'+
-              '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.5rem;color:var(--accent);">$'+chk.amount.toFixed(0)+'</div>'+
+              '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.5rem;color:var(--accent);">$'+totalIncome.toFixed(0)+'</div>'+
             '</div>'+
           '</div>'+
-          personSection+partnerSection+householdSection+
+          adamSection+britSection+householdSection+
         '</div>';
       });
 
